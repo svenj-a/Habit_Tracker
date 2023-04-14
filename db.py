@@ -1,47 +1,58 @@
 import sqlite3
+from datetime import date
+from user import User
 
 
-class DB:
+def get_db(name="main.db"):
+    db = sqlite3.connect(name)
+    create_tables(db)
+    return db
 
-    def __int__(self, db):
-        self.db_name = db
 
-    def get_db(self, name="main.db"):       # main db is later exchanged against test.db or else
-        db = sqlite3.connect(name)
-        return db
+def create_tables(db):
+    cur = db.cursor()  # try to avoid cursor and commit in every function
 
-    def create_tables(self, db):
-        cur = db.cursor()
+    cur.execute("""CREATE TABLE IF NOT EXISTS users (
+                name TEXT PRIMARY KEY,
+                password TEXT)""")
 
-        cur.execute("""CREATE TABLE IF NOT EXISTS users (
-                    name TEXT PRIMARY KEY,
-                    password TEXT)""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS habits (
+                habitID INT NOT NULL UNIQUE AUTO_INCREMENT,
+                name TEXT,
+                description TEXT,
+                period TEXT,
+                date TIMESTAMP,
+                current_streak INTEGER,
+                longest_streak INTEGER,
+                username TEXT,
+                PRIMARY KEY (habitID),
+                FOREIGN KEY (username) REFERENCES users(name))""")
 
-        cur.execute("""CREATE TABLE IF NOT EXISTS habits (
-                    habitID INT NOT NULL UNIQUE AUTO_INCREMENT,
-                    name TEXT,
-                    description TEXT,
-                    date TIMESTAMP,
-                    period TEXT,
-                    current_streak INTEGER,
-                    longest_streak INTEGER,
-                    username,
-                    FOREIGN KEY (username) REFERENCES users(name),
-                    PRIMARY KEY (habitID))""")
+    db.commit()
 
-        db.commit()
 
-    def add_habit(self, db, name, description, period):
-        cur = db.cursor()
-        cur.execute("INSERT INTO habits VALUES (?, ?, ?)", (name, description, period))
-        db.commmit()
+def add_habit(db, name, description, period):
+    cur = db.cursor()
+    creation_date = date.today()
+    current_streak = 0
+    longest_streak = 0
+    username = User.get_current_username()
+    habit_attributes = [name, description, period, creation_date, current_streak, longest_streak, username]
+    cur.execute("INSERT INTO habits VALUES (?, ?, ?)", habit_attributes)
+    db.commmit()
 
-    def add_user(self, db, name, password):
-        cur = db.cursor()
-        cur.execute("INSERT INTO users VALUES (?, ?, ?)", (name, password))
-        db.commit()
 
-    def get_habit_data(self, db, name):
-        cur = db.cursor()
-        cur.execute("SELECT * FROM habits WHERE name=?", (name))
-        return cur.fetchall()
+def add_user(db, name, password):
+    cur = db.cursor()
+    cur.execute("INSERT INTO users VALUES (?, ?, ?)", (name, password))
+    db.commit()
+
+
+def update_habit(name):
+    pass
+
+
+def get_habit_data(db, name):
+    cur = db.cursor()
+    cur.execute("SELECT * FROM habits WHERE name=?", name)
+    return cur.fetchall()
