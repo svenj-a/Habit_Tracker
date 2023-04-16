@@ -1,5 +1,5 @@
 from datetime import date
-import db
+from db import DB
 # add docstrings and comments!!!!
 
 
@@ -16,9 +16,9 @@ class Habit:
         self.date = date.today()
         self.current_day_streak = 0
         self.longest_streak = 0
-        self.goal = goal
+        self.goal = goal    # these definitions don't quite make sense... change it later on!
 
-    def create_habit(self, db):
+    def create_habit(self, db_name):
         db.add_habit(db)
 
     def complete_habit(self, completion_date=None):
@@ -45,5 +45,6 @@ class Habit:
         if self.goal == self.longest_streak:
             print(f"Congratulations, you reached you goals for the habit {self.name}")
 
-    def delete_habit(self):
+    def delete_habit(self, name):
         pass
+        # drop statement for entry by habit name (that must be the PK)
