@@ -11,21 +11,21 @@ def cli():
     stop = False
 
     while not stop:
-        login = questionary.select(
-            "Welcome. Have you been here before?",
-            choices=[
-                "Login",
-                "Register",
-                "Exit"
-            ]
-        ).ask()
-
-        if login == "Login":
-            pass
-        elif login == "Register":
-            pass
-        elif login == "Exit":
-            stop = True
+        # login = questionary.select(
+        #     "Welcome. Have you been here before?",
+        #     choices=[
+        #         "Login",
+        #         "Register",
+        #         "Exit"
+        #     ]
+        # ).ask()
+        #
+        # if login == "Login":
+        #     pass
+        # elif login == "Register":
+        #     pass
+        # elif login == "Exit":
+        #     stop = True
 
         main_menu = questionary.select(
             "What do you want to do?",
@@ -39,16 +39,26 @@ def cli():
                 "How often do you want to perform your habit?",
                 choices=["daily", "weekly", "monthly"]
             ).ask()
-            habit = Habit.create_habit(db, name, desc, period)  # attribute kauderwelsch in habit und db class beheben!
-            habit.store(db)
+            goal = questionary.text(
+                "Set a final goal. Choose the number of days/ weeks/ months you want to perform the habit."
+            ).ask()
+            habit = Habit(name, desc, period, int(goal))
+            habit.create_habit(db)
+            # add exception handling for already existing names or add artificial key for habits table in DB!
+
         elif main_menu == "Delete":
-            habit_name = questionary.confirm("Which habit do you want to delete?").ask()
+            habit_name = questionary.text("Which habit do you want to delete?").ask()
+            # change to questionary.select type and display the selection of currently stored habits.
         elif main_menu == "Analyze":
             pass
+        # print(self.cur.execute("SELECT * FROM habits"))
         elif main_menu == "Logout":
-            # return to login question
+            # return to log in question
+            pass
         elif main_menu == "Exit":
             stop = True
+        else:
+            print("\nInvalid input. Please select one of the displayed options.\n")
 
 
 if __name__ == '__main__':
