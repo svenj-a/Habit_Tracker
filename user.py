@@ -1,5 +1,5 @@
 import questionary
-from db import DB
+#from db import DB
 
 
 class User:
@@ -15,7 +15,7 @@ class User:
         self.current_user = username
 
     def get_current_username(self):
-        pass
+        return self.current_user
 
     def create_profile(self, name):
         pass

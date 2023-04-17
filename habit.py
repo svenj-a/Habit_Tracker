@@ -5,34 +5,41 @@ from db import DB
 
 class Habit:
 
-    def __init__(self, name: str, period, goal: int):
+    def __init__(self, name: str, description: str, period: str, goal: int):
         """
         The Habit class specifies the habit attributes. It can be used to create, complete, break and delete habits.
         Calculates the current day streak, updates the longest day streak if necessary and compares current state to the
         habit goal.
         """
+
         self.name = name
+        self.desc = description
         self.period = period
         self.date = date.today()
-        self.current_day_streak = 0
-        self.longest_streak = 0
+        self.curr_streak = 0
+        self.long_streak = 0
         self.goal = goal    # these definitions don't quite make sense... change it later on!
 
-    def create_habit(self, db_name):
-        db.add_habit(db)
+    def create_habit(self, db):
+        DB.add_habit(db, self.name, self.desc, self.period, self.date, self.curr_streak, self.long_streak, self.goal)
 
-    def complete_habit(self, completion_date=None):
-        if not completion_date:
-            completion_date = date.today()
-        self.current_day_streak += 1
+    def complete_habit(self, name):
+        """
+        Increments the current day streak for the habit.
+        :param name: name of the habit that was completed
+        :return:
+        """
+        day_streak = DB.cur.execute("SELECT current_day_streak FROM habits WHERE habit_name = name")
+        day_streak += 1
+        # update value in db!
         self.day_streak()
         self.check_goal()
 
     def break_habit(self):
         pass
 
-    def day_streak(self):
-        start_date = self.date
+    def day_streak(self, name):
+        start_date = DB.cur.execute("SELECT creation_date FROM habits WHERE habit_name = name")
         current_date = date.today()
         self.current_day_streak = current_date - start_date
         print(self.current_day_streak)
