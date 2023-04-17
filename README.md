@@ -10,7 +10,18 @@ doing and how close you already are to having established your new routines.
 ## Functionality
 
 ## Installation
+```shell
+pip install -r requirements.txt
+```
 
 ## Usage
+To start the program execute
+```shell
+python main.py
+```
+and follow the instructions in your console.
 
 ## Testing
+```shell
+pytest .
+```
