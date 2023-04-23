@@ -1,4 +1,8 @@
-import db
+from db import DB
+
+
+def list_all_habits(db):
+    pass
 
 
 def view_habit(db, habit):
@@ -9,5 +13,13 @@ def view_habit(db, habit):
     :return: database entry for the respective habit
     """
 
-    data = db.get_habit_data(db, habit)
+    data = DB.get_habit_data(db, habit)
     return data
+
+
+def view_closest_goal(db):
+    pass
+
+
+def view_longest_streaks(db):
+    pass

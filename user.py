@@ -4,7 +4,8 @@ import questionary
 
 class User:
   
-    def __init__(self):
+    def __init__(self, name):
+        self.username = name
         self.current_user = None
 
     def log_in(self, username):
