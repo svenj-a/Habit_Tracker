@@ -51,7 +51,7 @@ class DB:
     #     cur.execute("INSERT INTO users VALUES (?, ?, ?)", (username, password))
     #     db.commit()
 
-    def update_habit(self, name):
+    def update_habit(self, db, name):
         pass
 
     def get_habit_data(self, db, name):
