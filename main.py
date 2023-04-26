@@ -1,38 +1,23 @@
 import questionary
+import sqlite3
 from db import DB
 from habit import Habit
-# from user import User
 
 
 def cli():
-    db = DB()
+    db = DB("trialDB.db")   # remove name and .db files for first run!!
     DB.get_db(db)
 
     stop = False
 
     while not stop:
-        # login = questionary.select(
-        #     "Welcome. Have you been here before?",
-        #     choices=[
-        #         "Login",
-        #         "Register",
-        #         "Exit"
-        #     ]
-        # ).ask()
-        #
-        # if login == "Login":
-        #     pass
-        # elif login == "Register":
-        #     pass
-        # elif login == "Exit":
-        #     stop = True
 
         main_menu = questionary.select(
-            "What do you want to do?",
-            choices=["Create", "Delete", "Analyze", "Logout", "Exit"]
+            "Welcome. What do you want to do?",
+            choices=["Create habit", "Complete habit", "Analyze habits", "Delete habit", "Exit"]
         ).ask()
 
-        if main_menu == "Create":
+        if main_menu == "Create habit":
             name = questionary.text("What's the name of your new habit?").ask()
             desc = questionary.text("Please provide a short description of your habit.").ask()
             period = questionary.select(
@@ -40,21 +25,45 @@ def cli():
                 choices=["daily", "weekly", "monthly"]
             ).ask()
             goal = questionary.text(
-                "Set a final goal. Choose the number of days/ weeks/ months you want to perform the habit."
+                "Set a final goal: How often do you want to perform the habit? Please insert a number..."
             ).ask()
-            habit = Habit(name, desc, period, int(goal))
-            habit.create_habit(db)
-            # add exception handling for already existing names or add artificial key for habits table in DB!
 
-        elif main_menu == "Delete":
-            habit_name = questionary.text("Which habit do you want to delete?").ask()
-            # change to questionary.select type and display the selection of currently stored habits.
-        elif main_menu == "Analyze":
+            habit_created = False
+            while not habit_created:
+                try:
+                    habit = Habit(name, desc, period, int(goal))
+                    habit.create_habit(db)
+                    habit_created = True
+                except TypeError:
+                    print("Please enter an integer number!")
+                except sqlite3.IntegrityError:
+                    print(f"A habit with the name {name} already exists. Please choose a different name:")
+                    name = questionary.text("What's the name of your new habit?").ask()
+        elif main_menu == "Complete habit":
             pass
-        # print(self.cur.execute("SELECT * FROM habits"))
-        elif main_menu == "Logout":
-            # return to log in question
-            pass
+        elif main_menu == "Analyze habits":
+            analysis_menu = questionary.select(
+                "What do you want to know about your habits?",
+                choices=["View all habits", "View habits with periodicity ...", "View personal record"]
+            ).ask()
+            if analysis_menu == "View all habits":
+                db.cur.execute("SELECT * FROM habits")
+                all_habits = db.cur.fetchall()
+                for habit in all_habits:
+                    print(habit)
+            elif analysis_menu == "View habits with periodicity ...":
+                pass
+
+        elif main_menu == "Delete habit":
+            db.cur.execute("""SELECT name FROM habits ORDER BY name ASC""")
+            habit_list = db.cur.fetchall()
+            print(habit_list)
+            habit_name = questionary.select(
+                "Which habit do you want to delete?",
+                choices=[habit_list]
+            ).ask()                     # What's the problem here? AttributeError: 'list' object has no attribute 'get'
+            db.drop_habit(db, habit_name)
+
         elif main_menu == "Exit":
             stop = True
         else:
