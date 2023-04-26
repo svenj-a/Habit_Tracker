@@ -1,4 +1,4 @@
-from datetime import date
+import datetime
 from db import DB
 # add docstrings and comments!!!!
 
@@ -15,7 +15,7 @@ class Habit:
         self.name = name
         self.desc = description
         self.period = period
-        self.date = date.today()
+        self.date = datetime.datetime.today()
         self.curr_streak = 0
         self.long_streak = 0
         self.goal = goal
@@ -38,7 +38,7 @@ class Habit:
 
     def day_streak(self, name):
         start_date = DB.cur.execute("SELECT creation_date FROM habits WHERE habit_name = name")
-        current_date = date.today()
+        current_date = datetime.datetime.today()
         self.current_day_streak = current_date - start_date
         print(self.current_day_streak)
         int_day_streak = self.current_day_streak.seconds//3600

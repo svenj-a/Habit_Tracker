@@ -1,5 +1,4 @@
 import sqlite3
-from datetime import date
 # from user import User
 
 
@@ -26,9 +25,9 @@ class DB:
         #             password TEXT)""")
 
         self.cur.execute("""CREATE TABLE IF NOT EXISTS habits (
-                            habit_name TEXT PRIMARY KEY,
+                            name TEXT PRIMARY KEY,
                             description TEXT,
-                            periodic TEXT,
+                            period TEXT,
                             creation_date DATE,
                             current_streak INTEGER,
                             longest_streak INTEGER,
@@ -58,5 +57,8 @@ class DB:
         cur = db.cursor()
         cur.execute("SELECT * FROM habits WHERE name=?", name)
         return cur.fetchall()
+
+    def drop_habit(self, db, name):
+        self.cur.execute("""DELETE FROM habits WHERE name = name""")
 
 # close database connection at the end of the program ???
