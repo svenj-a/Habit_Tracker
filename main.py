@@ -39,8 +39,10 @@ def cli():
                 except sqlite3.IntegrityError:
                     print(f"A habit with the name {name} already exists. Please choose a different name:")
                     name = questionary.text("What's the name of your new habit?").ask()
+
         elif main_menu == "Complete habit":
             pass
+
         elif main_menu == "Analyze habits":
             analysis_menu = questionary.select(
                 "What do you want to know about your habits?",
@@ -53,16 +55,20 @@ def cli():
                     print(habit)
             elif analysis_menu == "View habits with periodicity ...":
                 pass
+                # put the above block in db.py, call analysis method that calls db method
 
         elif main_menu == "Delete habit":
-            db.cur.execute("""SELECT name FROM habits ORDER BY name ASC""")
-            habit_list = db.cur.fetchall()
+            db.cur.execute("""SELECT name FROM habits ORDER BY name""")
+            habits = db.cur.fetchall()
+            habit_list = []
+            for habit in habits:
+                habit_list.append(habit)
             print(habit_list)
             habit_name = questionary.select(
                 "Which habit do you want to delete?",
-                choices=[habit_list]
-            ).ask()                     # What's the problem here? AttributeError: 'list' object has no attribute 'get'
-            db.drop_habit(db, habit_name)
+                choices=habit_list
+            ).ask()                     # AttributeError: 'tuple' object has no attribute 'get'
+            db.drop_habit(db, habit_name)  # put this block in db.py
 
         elif main_menu == "Exit":
             stop = True
