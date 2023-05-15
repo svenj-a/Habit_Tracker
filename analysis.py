@@ -1,11 +1,18 @@
-from db import DB
-
-
 def list_all_habits(db):
-    pass
+    db.cur.execute("SELECT * FROM habits")
+    all_habits = db.cur.fetchall()
+    for habit in all_habits:
+        print(habit)
 
 
-def view_habit(db, habit):
+def list_filtered_habits(db, periodicity):
+    db.cur.execute("SELECT * FROM habits WHERE periodicity=?", periodicity)
+    all_habits = db.cur.fetchall()
+    for habit in all_habits:
+        print(habit)
+
+
+def view_single_habit(db, habit):
     """
     Displays the database entry for any single habit.
     :param db: an initialized sqlite3 database connection
@@ -13,7 +20,7 @@ def view_habit(db, habit):
     :return: database entry for the respective habit
     """
 
-    data = DB.get_habit_data(db, habit)
+    data = db.get_habit_data(habit)
     return data
 
 
