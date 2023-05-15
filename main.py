@@ -1,11 +1,13 @@
 import questionary
 import sqlite3
+
+import analysis
 from db import DB
 from habit import Habit
 
 
 def cli():
-    db = DB("trialDB.db")   # remove name and .db files for first run!!
+    db = DB()
     DB.get_db(db)
 
     stop = False
@@ -24,16 +26,17 @@ def cli():
                 "How often do you want to perform your habit?",
                 choices=["daily", "weekly", "monthly"]
             ).ask()
-            goal = questionary.text(
-                "Set a final goal: How often do you want to perform the habit? Please insert a number..."
-            ).ask()
-
             habit_created = False
             while not habit_created:
                 try:
+                    goal = questionary.text(
+                        "Set a final goal: How often do you want to perform the habit? Please insert a number..."
+                    ).ask()
                     habit = Habit(name, desc, period, int(goal))
                     habit.create_habit(db)
                     habit_created = True
+                except ValueError:
+                    print("Please enter an integer number!")
                 except TypeError:
                     print("Please enter an integer number!")
                 except sqlite3.IntegrityError:
@@ -45,30 +48,40 @@ def cli():
 
         elif main_menu == "Analyze habits":
             analysis_menu = questionary.select(
-                "What do you want to know about your habits?",
-                choices=["View all habits", "View habits with periodicity ...", "View personal record"]
+                "\nWhat do you want to know about your habits?",
+                choices=["View all habits", "View one habit ...", "View habits with periodicity ...",
+                         "View personal record"]
             ).ask()
+
             if analysis_menu == "View all habits":
-                db.cur.execute("SELECT * FROM habits")
-                all_habits = db.cur.fetchall()
-                for habit in all_habits:
-                    print(habit)
+                analysis.list_all_habits(db)
+
             elif analysis_menu == "View habits with periodicity ...":
                 pass
-                # put the above block in db.py, call analysis method that calls db method
+                # selected_periodicity =
+                # analysis.list_filtered_habits(db, selected_periodicity)
+
+            elif analysis_menu == "View one habit ...":
+                pass
+                # selected_habit =    # same problem like in delete habit!!! how to turn tuple in list??
+                # analysis.view_single_habit(db, selected_habit)
 
         elif main_menu == "Delete habit":
-            db.cur.execute("""SELECT name FROM habits ORDER BY name""")
+            db.cur.execute("SELECT name FROM habits ORDER BY name")
             habits = db.cur.fetchall()
             habit_list = []
             for habit in habits:
-                habit_list.append(habit)
+                habit_list.append(*habit)   # the asterisk unpacks the tuple, so that habit_list truly is a list!
             print(habit_list)
-            habit_name = questionary.select(
-                "Which habit do you want to delete?",
-                choices=habit_list
-            ).ask()                     # AttributeError: 'tuple' object has no attribute 'get'
-            db.drop_habit(db, habit_name)  # put this block in db.py
+            try:
+                habit_name = questionary.select(
+                    "\nWhich habit do you want to delete?",
+                    choices=habit_list
+                ).ask()
+                db.drop_habit((habit_name, ))   # argument must be turned into type tuple --> (arg,)
+            except ValueError:
+                print("\nThere are no habits available! Please select a different option."
+                      "You could for example create a habit!\n")  # put more stuff in db.py drop_habit!
 
         elif main_menu == "Exit":
             stop = True
