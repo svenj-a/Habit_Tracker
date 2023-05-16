@@ -1,17 +1,20 @@
 import datetime
 from db import DB
-# add docstrings and comments!!!!
 
 
 class Habit:
 
     def __init__(self, name: str, description: str, period: str, goal: int):
         """
-        The Habit class specifies the habit attributes. It can be used to create, complete, break and delete habits.
-        Calculates the current day streak, updates the longest day streak if necessary and compares current state to the
-        habit goal.
+        The Habit class specifies the habit attributes. It can create, complete, and delete habits.
+        Helper methods calculate the current day streak, update the longest day streak if necessary and compare the
+        current state to the final goal.
+        :param name: name of the habit (str); provided by user input
+        :param description: description of the habit (str); provided by user input
+        :param period: periodicity of the habit (str); selected by user input from ("daily", "weekly", "monthly")
+        :param goal: final goal: How often is the habit to be completed until it is established? (int); provided by user
+                input
         """
-
         self.name = name
         self.desc = description
         self.period = period
@@ -22,6 +25,11 @@ class Habit:
         self.goal = goal
 
     def create_habit(self, db):
+        """
+        Takes in all values necessary to create a habit and passes them to the respective db method.
+        :param db: name of the actual database
+        :return:
+        """
         DB.add_habit(db, self.name, self.desc, self.period, self.date, self.completed_total, self.current_streak,
                      self.longest_streak, self.goal)
 
