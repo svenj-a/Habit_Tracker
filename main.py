@@ -35,9 +35,7 @@ def cli():
                     habit = Habit(name, desc, period, int(goal))
                     habit.create_habit(db)
                     habit_created = True
-                except ValueError:
-                    print("Please enter an integer number!")
-                except TypeError:
+                except (ValueError, TypeError):
                     print("Please enter an integer number!")
                 except sqlite3.IntegrityError:
                     print(f"A habit with the name {name} already exists. Please choose a different name:")
