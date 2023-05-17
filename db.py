@@ -74,6 +74,7 @@ class DB:
         """
         date = datetime.datetime.today()
         self.cur.execute("""INSERT INTO completions (name, completion_date) VALUES (?, ?)""", (habit, date))
+        self.db.commit()
 
     def update_completed_total(self, name, value):
         """
@@ -85,15 +86,23 @@ class DB:
         self.cur.execute("""UPDATE habits SET completed_total=? WHERE name=?""", (value, name))
         self.db.commit()
 
-    def update_streaks(self, name, curr_str, lon_str):
+    def update_curr_streak(self, name, curr_str):
         """
         Updates the value for current_streak and longest_streak every time a habit is checked off.
         :param name: name of the habit that needs to be updated
         :param curr_str: new value that is to be inserted into the column current_streak
-        :param lon_str: new value that is to be inserted into the column longest_streak
         :return:
         """
         self.cur.execute("""UPDATE habits SET current_streak=? WHERE name=?""", (curr_str, name))
+        self.db.commit()
+
+    def update_lon_streak(self, name, lon_str):
+        """
+        Updates the value for current_streak and longest_streak every time a habit is checked off.
+        :param name: name of the habit that needs to be updated
+        :param lon_str: new value that is to be inserted into the column longest_streak
+        :return:
+        """
         self.cur.execute("""UPDATE habits SET longest_streak=? WHERE name=?""", (lon_str, name))
         self.db.commit()
 
@@ -104,8 +113,8 @@ class DB:
         :return:
         """
         self.cur.execute("""SELECT * FROM habits WHERE name=?""", name)
-        self.db.commit()
-        self.cur.fetchall()
+        data = self.cur.fetchall()
+        print(data)
 
     def drop_habit(self, name):
         """
