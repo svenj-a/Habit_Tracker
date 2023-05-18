@@ -40,41 +40,69 @@ class Habit:
         :param name: the name of the habit to be completed
         :return:
         """
+
+        # Fetch habit attributes from db.
         period = db.cur.execute("""SELECT periodicity FROM habits WHERE name=?""", (self.name,)).fetchall()
         self.period = period[0][0]
         curr_str = db.cur.execute("""SELECT current_streak FROM habits WHERE name=?""", (self.name,)).fetchall()
         self.current_streak = curr_str[0][0]
         lon_str = db.cur.execute("""SELECT longest_streak FROM habits WHERE name=?""", (self.name,)).fetchall()
         self.longest_streak = lon_str[0][0]
+        db.add_completion(name)
+        # Get timestamp now an timestamp last completion.
+        now = datetime.datetime.today()
+        completed = db.cur.execute("""SELECT MAX(completion_date) FROM completions WHERE name=?""",
+                                   (self.name,)).fetchall()
+        last = datetime.datetime.strptime(completed[0][0], '%Y-%m-%d %H:%M:%S.%f')
+
+        # Check off daily, weekly or monthly habits with the according streak calculations.
         if self.period == "daily":
-            now = datetime.datetime.today()
-            while True:
-                try:
-                    completed = db.cur.execute("""SELECT MAX(completion_date) FROM completions WHERE name=?""",
-                                               (self.name,)).fetchall()
-                    last = datetime.datetime.strptime(completed[0][0], '%Y-%m-%d %H:%M:%S.%f')
-                    day_delta = (now - last).days
-                    break
-                except TypeError:
-                    db.add_completion(name)
+            day_delta = (now.day - last.day)
+            # Break streak and reset it to one, if completion is overdue.
             if day_delta > 1:
-                db.add_completion(name)
                 self.current_streak = 1  # insert same for longest day streak and check goal!!! Put more code in other methods...
                 db.update_curr_streak(self.name, self.current_streak)
-                print(f"You broke the habit {self.name} and lost your day streak. "
+                print(f"You broke the habit '{self.name}' and lost your day streak. "
                       f"Your new streak is {self.current_streak}!")
+            # Don't complete habit and don't add completion event to table if already done.
             elif day_delta < 1 and self.current_streak > 0:
                 print("You have already completed this habit! Come back tomorrow...")
+            # Complete habit and increment streak(s).
             else:
-                db.add_completion(name)
                 self.current_streak += 1
                 db.update_curr_streak(self.name, self.current_streak)
-                print(f"Congratulations! You have checked off your habit {self.name} "
+                print(f"Congratulations! You have checked off your habit '{self.name}' "
                       f"and gained a streak of {self.current_streak} day(s)!")
-        elif period[0] == "weekly":
-            pass
-        elif period[0] == "monthly":
-            pass
+
+        elif self.period == "weekly":
+            week_delta = (now.isocalendar()[1] - last.isocalendar()[1])
+            if week_delta > 1:
+                self.current_streak = 1  # insert same for longest day streak and check goal!!! Put more code in other methods...
+                db.update_curr_streak(self.name, self.current_streak)
+                print(f"You broke the habit '{self.name}' and lost your day streak. "
+                      f"Your new streak is {self.current_streak}!")
+            elif week_delta < 1 and self.current_streak > 0:
+                print("You have already completed this habit! Come back tomorrow...")
+            else:
+                self.current_streak += 1
+                db.update_curr_streak(self.name, self.current_streak)
+                print(f"Congratulations! You have checked off your habit '{self.name}' "
+                      f"and gained a streak of {self.current_streak} week(s)!")
+
+        elif self.period == "monthly":
+            month_delta = (now.month - last.month)
+            if month_delta > 1:
+                self.current_streak = 1  # insert same for longest day streak and check goal!!! Put more code in other methods...
+                db.update_curr_streak(self.name, self.current_streak)
+                print(f"You broke the habit '{self.name}' and lost your day streak. "
+                      f"Your new streak is {self.current_streak}!")
+            elif month_delta < 1 and self.current_streak > 0:
+                print("You have already completed this habit! Come back tomorrow...")
+            else:
+                self.current_streak += 1
+                db.update_curr_streak(self.name, self.current_streak)
+                print(f"Congratulations! You have checked off your habit '{self.name}' "
+                      f"and gained a streak of {self.current_streak} month(s)!")
 
     def _day_streak(self, db):
         pass

@@ -107,6 +107,7 @@ def cli():
                       "You could for example create a habit!")  # put more stuff in db.py drop_habit!
 
         elif main_menu == "Exit":
+            db.cur.close()
             stop = True
         else:
             print("Invalid input. Please select one of the displayed options.")
