@@ -86,14 +86,16 @@ class DB:
         self.cur.execute("""UPDATE habits SET completed_total=? WHERE name=?""", (value, name))
         self.db.commit()
 
-    def update_curr_streak(self, name, curr_str):
+    def update_streaks(self, name, curr_str, lon_str):
         """
         Updates the value for current_streak and longest_streak every time a habit is checked off.
         :param name: name of the habit that needs to be updated
         :param curr_str: new value that is to be inserted into the column current_streak
+        :param lon_str: new value that is to be inserted into the column longest_streak
         :return:
         """
         self.cur.execute("""UPDATE habits SET current_streak=? WHERE name=?""", (curr_str, name))
+        self.cur.execute("""UPDATE habits SET longest_streak=? WHERE name=?""", (lon_str, name))
         self.db.commit()
 
     def update_lon_streak(self, name, lon_str):
@@ -124,5 +126,3 @@ class DB:
         """
         self.cur.execute("""DELETE FROM habits WHERE name=?""", name)
         self.db.commit()
-
-# close database connection at the end of the program ???

@@ -8,7 +8,7 @@ from habit import Habit
 
 def cli():
     db = DB()
-    DB.get_db(db)
+    db.get_db()
     # delete the following block after development is completed:
     # habit1 = Habit('sleep', 'Sleep at least 7h per day.', 'daily', 30)
     # habit1.create_habit(db)
@@ -74,7 +74,7 @@ def cli():
             analysis_menu = questionary.select(
                 "What do you want to know about your habits?",
                 choices=["View all habits", "View one habit ...", "View habits with periodicity ...",
-                         "View personal record"]
+                         "View personal records"]
             ).ask()
 
             if analysis_menu == "View all habits":
@@ -89,6 +89,9 @@ def cli():
                 pass
                 # selected_habit =    # same problem like in delete habit!!! how to turn tuple in list??
                 # analysis.view_single_habit(db, selected_habit)
+            elif analysis_menu == "View personal records":
+                # split into the longest streak and closest goal and add return button to main menu!
+                pass
 
         elif main_menu == "Delete habit":
             db.cur.execute("SELECT name FROM habits ORDER BY name")
