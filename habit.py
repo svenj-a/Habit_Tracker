@@ -48,56 +48,53 @@ class Habit:
         self.current_streak = curr_str[0][0]
         lon_str = db.cur.execute("""SELECT longest_streak FROM habits WHERE name=?""", (self.name,)).fetchall()
         self.longest_streak = lon_str[0][0]
-        db.add_completion(name)
+        comp_tot = db.cur.execute("""SELECT completed_total FROM habits WHERE name=?""", (self.name,)).fetchall()
+        self.completed_total = comp_tot[0][0]
+
         # Get timestamp now an timestamp last completion.
         now = datetime.datetime.today()
         completed = db.cur.execute("""SELECT MAX(completion_date) FROM completions WHERE name=?""",
                                    (self.name,)).fetchall()
-        last = datetime.datetime.strptime(completed[0][0], '%Y-%m-%d %H:%M:%S.%f')
-        # Check off daily, weekly or monthly habits with the according streak calculations.
-        if self.period == "daily":
-            timedelta = (now.day - last.day)
-            timespan = "day(s)"
-            self._day_streak(db, timedelta, timespan)
-        elif self.period == "weekly":
-            timedelta = (now.isocalendar()[1] - last.isocalendar()[1])
-            timespan = "week(s)"
-            self._day_streak(db, timedelta, timespan)
-        elif self.period == "monthly":
-            timedelta = (now.month - last.month)
-            timespan = "month(s)"
-            self._day_streak(db, timedelta, timespan)
+        try:
+            last = datetime.datetime.strptime(completed[0][0], '%Y-%m-%d %H:%M:%S.%f')
+            # Check off daily, weekly or monthly habits with the according streak calculations.
+            timedelta = None
+            timespan = None
+            if self.period == "daily":
+                timedelta = (now.day - last.day)
+                timespan = "day(s)"
+            elif self.period == "weekly":
+                timedelta = (now.isocalendar()[1] - last.isocalendar()[1])
+                timespan = "week(s)"
+            elif self.period == "monthly":
+                timedelta = (now.month - last.month)
+                timespan = "month(s)"
+            self._day_streak(db, timedelta, timespan, name)
+        except ValueError:
+            db.add_completion(name)
+            self.current_streak = 1
+            self.longest_streak = 1
+            self.completed_total = 1
+            db.update_streaks(name, self.current_streak, self.longest_streak, self.completed_total)
 
-    def _day_streak(self, db, timedelta, timespan):
+    def _day_streak(self, db, timedelta, timespan, habit):
         """
         Checks whether the habit is completed, broken or unavailable (in case it was already completed in the current
         period) and calls the respective helper methods.
         :param db: name of the database
         :param timedelta: the day/week/month delta calculated in complete_habit()
         :param timespan: the string according to the periodicity that can be inserted in formatted strings
+        :param habit: name of the habit
         :return:
         """
         if timedelta > 1:
             self._reset_curr_streak(db)
+            db.add_completion(habit)
         elif timedelta < 1 and self.current_streak > 0:
             print(f"You have already completed this {self.period} habit! Try again later...")
         else:
             self._increment_curr_streak(db, timespan)
-
-    def _check_records(self):
-        """
-        Checks whether the longest day streak needs updating and whether the final goal is reached.
-        :return:
-        """
-        if self.current_streak > self.longest_streak:
-            self.longest_streak = self.current_streak
-        if self.goal < self.longest_streak:
-            to_go = self.goal - self.longest_streak
-            print(f"Keep it going, you have {to_go} time(s) to go until you reach your final goal!")
-        elif self.goal == self.longest_streak:
-            print(f"Congratulations, you reached your final goal for the habit '{self.name}'")
-        else:
-            pass
+            db.add_completion(habit)
 
     def _reset_curr_streak(self, db):
         """
@@ -106,8 +103,7 @@ class Habit:
         :return:
         """
         self.current_streak = 1
-        self._check_records()
-        db.update_streaks(self.name, self.current_streak, self.longest_streak)
+        db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
         print(f"You broke the habit '{self.name}' and lost your day streak. "
               f"Your new streak is {self.current_streak}!")
 
@@ -121,15 +117,29 @@ class Habit:
         """
         self.current_streak += 1
         self._check_records()
-        db.update_streaks(self.name, self.current_streak, self.longest_streak)
+        db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
         print(f"Congratulations! You have checked off your habit '{self.name}' "
               f"and gained a streak of {self.current_streak} {timespan}!")
 
-    def delete_habit(self, db, name):
+    def _check_records(self):
         """
-        Deletes a habit from the database that is selected by the user.
-        :param db: name of the database
-        :param name: name of the habit to be deleted
+        Checks whether the longest day streak needs updating and whether the final goal is reached.
         :return:
         """
-        db.drop_habit(name)
+        if self.current_streak > self.longest_streak:
+            self.longest_streak = self.current_streak
+
+        if self.goal < self.longest_streak:
+            to_go = self.goal - self.longest_streak
+            print(f"Keep it going, you have {to_go} time(s) to go until you reach your final goal!")
+        elif self.goal == self.longest_streak:
+            print(f"Congratulations, you reached your final goal for the habit '{self.name}'")
+
+    # def delete_habit(self, db, name):
+    #     """
+    #     Deletes a habit from the database that is selected by the user.
+    #     param db: name of the database
+    #     :param name: name of the habit to be deleted
+    #     :return:
+    #     """
+    #     db.drop_habit(name)

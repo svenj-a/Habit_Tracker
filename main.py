@@ -73,7 +73,7 @@ def cli():
         elif main_menu == "Analyze habits":
             analysis_menu = questionary.select(
                 "What do you want to know about your habits?",
-                choices=["View all habits", "View one habit ...", "View habits with periodicity ...",
+                choices=["View all habits", "View habits with periodicity ...", "View one habit ...",
                          "View personal records"]
             ).ask()
 
@@ -81,17 +81,29 @@ def cli():
                 analysis.list_all_habits(db)
 
             elif analysis_menu == "View habits with periodicity ...":
-                pass
-                # selected_periodicity =
-                # analysis.list_filtered_habits(db, selected_periodicity)
+                period = questionary.select(
+                    "Which filter do you want to apply?", choices=["daily", "weekly", "monthly"]
+                ).ask()
+                analysis.list_filtered_habits(db, period)
 
             elif analysis_menu == "View one habit ...":
-                pass
-                # selected_habit =    # same problem like in delete habit!!! how to turn tuple in list??
-                # analysis.view_single_habit(db, selected_habit)
+                habits = db.cur.execute("SELECT name FROM habits ORDER BY name").fetchall()
+                habit_list = []
+                for habit in habits:
+                    habit_list.append(*habit)  # the asterisk unpacks the tuple, so that habit_list truly is a list!
+                try:
+                    habit_name = questionary.select(
+                        "Which habit do you want to display in detail?",
+                        choices=habit_list
+                    ).ask()
+                    analysis.view_single_habit(db, habit_name)  # argument must be turned into type tuple --> (arg,)
+                except ValueError:
+                    print("There are no habits available! Please select a different option."
+                          "You could for example create a habit!")
+
             elif analysis_menu == "View personal records":
-                # split into the longest streak and closest goal and add return button to main menu!
-                pass
+                analysis.view_longest_streaks(db)
+                analysis.view_closest_goal(db)
 
         elif main_menu == "Delete habit":
             db.cur.execute("SELECT name FROM habits ORDER BY name")
