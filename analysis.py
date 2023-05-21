@@ -9,11 +9,18 @@ def list_all_habits(db):
     :return:
     """
     all_habits = db.cur.execute("""
-            SELECT name, periodicity, completed_total, current_streak, longest_streak, final_goal FROM habits
-            """).fetchall()
+        SELECT name, periodicity, completed_total, current_streak, longest_streak, final_goal
+        FROM habits
+        ORDER BY CASE
+            WHEN periodicity = 'daily' THEN 1
+            WHEN periodicity = 'weekly' THEN 2
+            WHEN periodicity = 'monthly' THEN 3
+            END,
+        name
+        """).fetchall()
     habit_df = pd.DataFrame(all_habits)
     headers = list(map(lambda x: x[0], db.cur.description))
-    print(tabulate(habit_df, headers=headers))
+    print(tabulate(habit_df, headers=headers, tablefmt="outline"))
 
 
 def list_filtered_habits(db, periodicity):
@@ -24,11 +31,14 @@ def list_filtered_habits(db, periodicity):
     :return:
     """
     filtered_habits = db.cur.execute("""
-            SELECT name, completed_total, current_streak, longest_streak, final_goal FROM habits WHERE periodicity=?
-            """, (periodicity, )).fetchall()
+        SELECT name, completed_total, current_streak, longest_streak, final_goal
+        FROM habits
+        WHERE periodicity=?
+        ORDER BY name
+        """, (periodicity, )).fetchall()
     habit_df = pd.DataFrame(filtered_habits)
     headers = list(map(lambda x: x[0], db.cur.description))
-    print(tabulate(habit_df, headers=headers))
+    print(tabulate(habit_df, headers=headers, tablefmt="outline"))
 
 
 def view_single_habit(db, habit):
@@ -38,10 +48,32 @@ def view_single_habit(db, habit):
     :param habit: name of the habit that is to be displayed
     :return: database entry for the respective habit
     """
-    data = db.cur.execute("""SELECT * FROM habits WHERE name=?""", (habit, )).fetchall()
+    data = db.cur.execute("""
+        SELECT name, description, periodicity, current_streak, longest_streak, final_goal, completed_total,
+            creation_date
+        FROM habits
+        WHERE name=?
+        """, (habit, )).fetchall()
     df = pd.DataFrame(data)
     headers = list(map(lambda x: x[0], db.cur.description))
-    print(tabulate(df, headers=headers))
+    print(tabulate(df, headers=headers, tablefmt="outline"))
+
+
+def view_longest_streaks(db):
+    """
+    Prints the habit with the longest day streak.
+    :param db: name of the database
+    :return:
+    """
+    print("\nYou have obtained the longest streak for this habit:\n")
+    streak = db.cur.execute("""
+        SELECT ALL name, periodicity, MAX(longest_streak)
+        FROM habits
+        GROUP BY periodicity
+        """).fetchall()
+    df = pd.DataFrame(streak)
+    headers = list(map(lambda x: x[0], db.cur.description))
+    print(tabulate(df, headers=headers, tablefmt="grid"))
 
 
 def view_closest_goal(db):
@@ -52,21 +84,10 @@ def view_closest_goal(db):
     """
     print("\nThis habit is closest to your final goal:\n")
     goals = db.cur.execute("""
-            SELECT name, final_goal, longest_streak, MIN(final_goal - longest_streak) AS difference FROM habits
-            """).fetchall()
+        SELECT ALL name, periodicity, longest_streak, MIN(final_goal - longest_streak) AS difference, final_goal
+        FROM habits
+        GROUP BY periodicity
+        """).fetchall()
     df = pd.DataFrame(goals)
     headers = list(map(lambda x: x[0], db.cur.description))
-    print(tabulate(df, headers=headers))
-
-
-def view_longest_streaks(db):
-    """
-    Prints the habit with the longest day streak.
-    :param db: name of the database
-    :return:
-    """
-    print("\nYou have obtained the longest streak for this habit:\n")
-    streak = db.cur.execute("""SELECT name, MAX(longest_streak) AS longest_streak FROM habits""").fetchall()
-    df = pd.DataFrame(streak)
-    headers = list(map(lambda x: x[0], db.cur.description))
-    print(tabulate(df, headers=headers))
+    print(tabulate(df, headers=headers, tablefmt="grid"))

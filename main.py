@@ -102,8 +102,17 @@ def cli():
                           "You could for example create a habit!")
 
             elif analysis_menu == "View personal records":
-                analysis.view_longest_streaks(db)
-                analysis.view_closest_goal(db)
+                record = questionary.select(
+                    "Please select what you want to display:",
+                    choices=["View habit with the longest day streak!", "View habit with the closest goal!", "both"]
+                ).ask()
+                if record == "View habit with the longest day streak!":
+                    analysis.view_longest_streaks(db)
+                elif record == "View habit with the closest goal!":
+                    analysis.view_closest_goal(db)
+                elif record == "both":
+                    analysis.view_longest_streaks(db)
+                    analysis.view_closest_goal(db)
 
         elif main_menu == "Delete habit":
             db.cur.execute("SELECT name FROM habits ORDER BY name")
