@@ -133,8 +133,6 @@ def cli():
         elif main_menu == "Exit":
             db.cur.close()
             stop = True
-        else:
-            print("Invalid input. Please select one of the displayed options.")
 
 
 if __name__ == '__main__':

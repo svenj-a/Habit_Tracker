@@ -61,33 +61,47 @@ def view_single_habit(db, habit):
 
 def view_longest_streaks(db):
     """
-    Prints the habit with the longest day streak.
+    Prints all habits with the longest day streaks stratified by periodicity.
     :param db: name of the database
     :return:
     """
-    print("\nYou have obtained the longest streak for these habits:\n")
-    streak = db.cur.execute("""
-        SELECT ALL name, periodicity, MAX(longest_streak)
-        FROM habits
-        GROUP BY periodicity
-        """).fetchall()
-    df = pd.DataFrame(streak)
+    periods = ["daily", "weekly", "monthly"]
+    habits = []
+    for period in periods:
+        streaks = db.cur.execute("""
+                SELECT ALL name, periodicity, longest_streak
+                FROM habits
+                WHERE periodicity = ?
+                AND longest_streak = (SELECT MAX(longest_streak) FROM habits WHERE periodicity = ?)
+                ORDER BY name
+                """, (period, period)).fetchall()
+        for streak in streaks:
+            habits.append(streak)
+    df = pd.DataFrame(habits)
     headers = list(map(lambda x: x[0], db.cur.description))
+    print("\nYou have obtained the longest streak for these habits:\n")
     print(tabulate(df, headers=headers, tablefmt="grid"))
 
 
 def view_closest_goal(db):
     """
-    Prints the habit where the longest streak is closest to the final goal.
+    Prints the habits where the longest day streak is closest to the final goal stratified by periodicity.
     :param db: name of the database
     :return:
     """
-    print("\nThese habits are closest to your final goal:\n")
-    goals = db.cur.execute("""
-        SELECT ALL name, periodicity, longest_streak, MIN(final_goal - longest_streak) AS difference, final_goal
-        FROM habits
-        GROUP BY periodicity
-        """).fetchall()
-    df = pd.DataFrame(goals)
+    periods = ["daily", "weekly", "monthly"]
+    habits = []
+    for period in periods:
+        streaks = db.cur.execute("""
+                    SELECT ALL name, periodicity, longest_streak, (final_goal-longest_streak) AS difference, final_goal
+                    FROM habits
+                    WHERE periodicity = ?
+                    AND difference = (SELECT MIN(final_goal-longest_streak) FROM habits WHERE periodicity = ?)
+                    ORDER BY name
+                    """, (period, period)).fetchall()
+        for streak in streaks:
+            habits.append(streak)
+    df = pd.DataFrame(habits)
     headers = list(map(lambda x: x[0], db.cur.description))
+    print("\nThese habits are closest to your final goal:\n")
     print(tabulate(df, headers=headers, tablefmt="grid"))
