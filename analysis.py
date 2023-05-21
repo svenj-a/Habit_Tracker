@@ -65,7 +65,7 @@ def view_longest_streaks(db):
     :param db: name of the database
     :return:
     """
-    print("\nYou have obtained the longest streak for this habit:\n")
+    print("\nYou have obtained the longest streak for these habits:\n")
     streak = db.cur.execute("""
         SELECT ALL name, periodicity, MAX(longest_streak)
         FROM habits
@@ -82,7 +82,7 @@ def view_closest_goal(db):
     :param db: name of the database
     :return:
     """
-    print("\nThis habit is closest to your final goal:\n")
+    print("\nThese habits are closest to your final goal:\n")
     goals = db.cur.execute("""
         SELECT ALL name, periodicity, longest_streak, MIN(final_goal - longest_streak) AS difference, final_goal
         FROM habits
