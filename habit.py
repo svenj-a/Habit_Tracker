@@ -3,7 +3,7 @@ import datetime
 
 class Habit:
 
-    def __init__(self, name: str, description='', period='', goal=100):
+    def __init__(self, name: str, description='no description', period='daily', goal=100):
         """
         The Habit class specifies the habit attributes. It can create, complete, and delete habits.
         Helper methods calculate the current day streak, update the longest day streak if necessary and compare the
@@ -134,12 +134,3 @@ class Habit:
             print(f"Keep it going, you have {to_go} time(s) to go until you reach your final goal!")
         elif self.goal == self.longest_streak:
             print(f"Congratulations, you reached your final goal for the habit '{self.name}'")
-
-    # def delete_habit(self, db, name):
-    #     """
-    #     Deletes a habit from the database that is selected by the user.
-    #     param db: name of the database
-    #     :param name: name of the habit to be deleted
-    #     :return:
-    #     """
-    #     db.drop_habit(name)

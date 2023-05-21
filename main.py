@@ -9,7 +9,8 @@ from habit import Habit
 def cli():
     db = DB()
     db.get_db()
-    # delete the following block after development is completed:
+
+    # delete the following block after development is completed or put in try except to create dummy data:
     # habit1 = Habit('sleep', 'Sleep at least 7h per day.', 'daily', 30)
     # habit1.create_habit(db)
     # habit2 = Habit('brush teeth', 'Brush teeth every morning.', 'daily', 28)

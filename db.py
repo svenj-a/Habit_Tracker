@@ -90,14 +90,6 @@ class DB:
         self.cur.execute("""UPDATE habits SET completed_total=? WHERE name=?""", (comp_tot, name))
         self.db.commit()
 
-    # def get_habit_data(self, name):
-    #     """
-    #     Retrieves the data for a single habit from the database.
-    #     :param name: name of the habit to be returned
-    #     :return:
-    #     """
-    #     data = self.cur.execute("""SELECT * FROM habits WHERE name=?""", name).fetchall()
-
     def drop_habit(self, name):
         """
         Deletes a habit from the database that is selected by the user.
