@@ -93,10 +93,10 @@ def view_closest_goal(db):
     habits = []
     for period in periods:
         streaks = db.cur.execute("""
-                    SELECT ALL name, periodicity, longest_streak, (final_goal-longest_streak) AS difference, final_goal
+                    SELECT ALL name, periodicity, current_streak, (final_goal-current_streak) AS difference, final_goal
                     FROM habits
                     WHERE periodicity = ?
-                    AND difference = (SELECT MIN(final_goal-longest_streak) FROM habits WHERE periodicity = ?)
+                    AND difference = (SELECT MIN(final_goal-current_streak) FROM habits WHERE periodicity = ?)
                     ORDER BY name
                     """, (period, period)).fetchall()
         for streak in streaks:

@@ -15,6 +15,8 @@ pip install -r requirements.txt
 ```
 
 ## Usage
+The program is written in python 3.11 older versions might not be supported.
+
 To start the program execute
 ```shell
 python main.py
