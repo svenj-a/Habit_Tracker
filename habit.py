@@ -32,11 +32,12 @@ class Habit:
         db.add_habit(self.name, self.desc, self.period, self.date, self.completed_total, self.current_streak,
                      self.longest_streak, self.goal)
 
-    def complete_habit(self, db, name):
+    def complete_habit(self, db, name, now=datetime.datetime.today()):
         """
         Increments the current day streak for the habit.
         :param db: an initialized sqlite3 database connection
         :param name: the name of the habit to be completed
+        :param now: time of completion, default value is the current time (a different time can be inserted for testing)
         :return:
         """
         # Fetch habit attributes from db.
@@ -51,8 +52,7 @@ class Habit:
         comp_tot = db.cur.execute("""SELECT completed_total FROM habits WHERE name=?""", (self.name,)).fetchall()
         self.completed_total = comp_tot[0][0]
 
-        # Get timestamp now an timestamp last completion.
-        now = datetime.datetime.today()
+        # Get timestamp now and timestamp last completion.
         completed = db.cur.execute("""SELECT MAX(completion_date) FROM completions WHERE name=?""",
                                    (self.name,)).fetchall()
         try:
@@ -70,7 +70,7 @@ class Habit:
                 timedelta = (now.month - last.month)
                 timespan = "month(s)"
             self._day_streak(db, timedelta, timespan, name)
-        except ValueError:
+        except TypeError or ValueError:
             db.add_completion(name)
             self.current_streak = 1
             self.longest_streak = 1

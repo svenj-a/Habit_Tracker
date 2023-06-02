@@ -10,7 +10,6 @@ from db import DB
 
 def cli():
     db = DB()
-    db.get_db()
 
     # delete the following block after development is completed or put in try except to create dummy data:
     # habit1 = Habit('sleep', 'Sleep at least 7h per day.', 'daily', 30)
@@ -81,13 +80,15 @@ def cli():
             ).ask()
 
             if analysis_menu == "View all habits":
-                analysis.list_all_habits(db)
+                habits = analysis.list_all_habits(db)
+                format_print(db, habits)
 
             elif analysis_menu == "View habits with periodicity ...":
                 period = questionary.select(
                     "Which filter do you want to apply?", choices=["daily", "weekly", "monthly"]
                 ).ask()
-                analysis.list_filtered_habits(db, period)
+                habits = analysis.list_filtered_habits(db, period)
+                format_print(db, habits)
 
             elif analysis_menu == "View one habit ...":
                 habits = db.cur.execute("SELECT name FROM habits ORDER BY name").fetchall()
@@ -99,7 +100,8 @@ def cli():
                         "Which habit do you want to display in detail?",
                         choices=habit_list
                     ).ask()
-                    analysis.view_single_habit(db, habit_name)  # argument must be turned into type tuple --> (arg,)
+                    habit = analysis.view_single_habit(db, habit_name)  # turn argument into type tuple --> (arg,)
+                    format_print(db, habit)
                 except ValueError:
                     print("There are no habits available! Please select a different option."
                           "You could for example create a habit!")
@@ -107,22 +109,24 @@ def cli():
             elif analysis_menu == "View personal records":
                 record = questionary.select(
                     "Please select what you want to display:",
-                    choices=["View habit with the longest day streak!", "View habit with the closest goal!", "both"]
+                    choices=["View habit with the longest day streak!", "View habit with the closest goal!"]  # "both"
                 ).ask()
                 if record == "View habit with the longest day streak!":
-                    analysis.view_longest_streaks(db)
+                    lon_str = analysis.view_longest_streaks(db)
+                    print("\nYou have obtained the longest streak for these habits:\n")
+                    format_print(db, lon_str)
                 elif record == "View habit with the closest goal!":
-                    analysis.view_closest_goal(db)
-                elif record == "both":
-                    analysis.view_longest_streaks(db)
-                    analysis.view_closest_goal(db)
+                    cl_goal = analysis.view_closest_goal(db)
+                    print("\nThese habits are closest to your final goal:\n")
+                    format_print(db, cl_goal)
+                # elif record == "both":
+                #     analysis.view_longest_streaks(db)
+                #     analysis.view_closest_goal(db)
 
             elif analysis_menu == "View established habits":
-                established = analysis.view_established_habits(db)
-                df = pd.DataFrame(established)
-                headers = list(map(lambda x: x[0], db.cur.description))
+                habits = analysis.view_established_habits(db)
                 print("\nThese habits are already established:\n")
-                print(tabulate(df, headers=headers, tablefmt="grid"))
+                format_print(db, habits)
 
         elif main_menu == "Delete habit":
             db.cur.execute("SELECT name FROM habits ORDER BY name")

@@ -11,8 +11,9 @@ class DB:
         """
         self.db = sqlite3.connect(name)
         self.cur = self.db.cursor()
+        self._get_db()
 
-    def get_db(self):
+    def _get_db(self):
         """
         Initializes the database.
         :return: returns the db
