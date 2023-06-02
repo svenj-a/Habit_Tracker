@@ -95,7 +95,8 @@ def view_closest_goal(db):
         streaks = db.cur.execute("""
                     SELECT ALL name, periodicity, current_streak, (final_goal-current_streak) AS difference, final_goal
                     FROM habits
-                    WHERE periodicity = ?
+                    WHERE longest_streak < final_goal
+                    AND periodicity = ?
                     AND difference = (SELECT MIN(final_goal-current_streak) FROM habits WHERE periodicity = ?)
                     ORDER BY name
                     """, (period, period)).fetchall()
@@ -105,3 +106,23 @@ def view_closest_goal(db):
     headers = list(map(lambda x: x[0], db.cur.description))
     print("\nThese habits are closest to your final goal:\n")
     print(tabulate(df, headers=headers, tablefmt="grid"))
+
+
+def view_established_habits(db):
+    """
+    Return all habits that are already established, i.e. where the final goal has been reached in one streak.
+    :param db: name of the database
+    :return:
+    """
+    periods = ["daily", "weekly", "monthly"]
+    habits = []
+    for period in periods:
+        established = db.cur.execute("""
+                        SELECT ALL name, periodicity, current_streak, longest_streak, final_goal
+                        FROM habits
+                        WHERE longest_streak >= final_goal
+                        ORDER BY periodicity, name
+                        """, (period, period)).fetchall()
+        for item in established:
+            habits.append(item)
+    return habits

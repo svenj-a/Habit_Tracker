@@ -1,9 +1,11 @@
 import questionary
 import sqlite3
+import pandas as pd
+from tabulate import tabulate
 
+from habit import Habit
 import analysis
 from db import DB
-from habit import Habit
 
 
 def cli():
@@ -75,7 +77,7 @@ def cli():
             analysis_menu = questionary.select(
                 "What do you want to know about your habits?",
                 choices=["View all habits", "View habits with periodicity ...", "View one habit ...",
-                         "View personal records"]
+                         "View personal records", "View established habits"]
             ).ask()
 
             if analysis_menu == "View all habits":
@@ -115,6 +117,13 @@ def cli():
                     analysis.view_longest_streaks(db)
                     analysis.view_closest_goal(db)
 
+            elif analysis_menu == "View established habits":
+                established = analysis.view_established_habits(db)
+                df = pd.DataFrame(established)
+                headers = list(map(lambda x: x[0], db.cur.description))
+                print("\nThese habits are already established:\n")
+                print(tabulate(df, headers=headers, tablefmt="grid"))
+
         elif main_menu == "Delete habit":
             db.cur.execute("SELECT name FROM habits ORDER BY name")
             habits = db.cur.fetchall()
@@ -134,6 +143,18 @@ def cli():
         elif main_menu == "Exit":
             db.cur.close()
             stop = True
+
+
+def format_print(db, value):
+    """
+    Format print statements with tabulate to return to cli
+    :param db: name of the database connection
+    :param value: an object that is returned by a method or function and needs to be printed to the console
+    :return:
+    """
+    df = pd.DataFrame(value)
+    headers = list(map(lambda x: x[0], db.cur.description))
+    print(tabulate(df, headers=headers, tablefmt="grid"))
 
 
 if __name__ == '__main__':
