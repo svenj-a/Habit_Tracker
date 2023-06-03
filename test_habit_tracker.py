@@ -4,6 +4,8 @@ from db import DB
 from habit import Habit
 import analysis
 
+# https://stackoverflow.com/questions/23988853/how-to-mock-set-system-date-in-pytest
+
 
 @pytest.fixture(autouse=True)
 def db():
@@ -13,7 +15,7 @@ def db():
 
 @pytest.fixture(autouse=True)
 def create_habits(db):
-    Habit('sleep', 'Sleep at least 7h per day.', 'daily', 30).create_habit(db)
+    Habit('sleep', 'Sleep at least 7h per day.', 'daily', 30, ).create_habit(db)
     Habit('brush teeth', 'Brush teeth every morning.', 'daily', 28).create_habit(db)
     Habit('clean bathroom', 'Clean the bathroom including toilet, shower, and sink.', 'weekly', 8
           ).create_habit(db)
@@ -27,7 +29,7 @@ def add_completion_data(db):
     # add completion events with complete habit method and non-default timestamp arguments
 
 
-class TestHabitDB:
+class TestHabit:
 
     def test_create_habit_fixture(self, db):    # necessary?
         data = analysis.list_all_habits(db)
@@ -42,21 +44,14 @@ class TestHabitDB:
         assert len(data) == 0
         # set assert value to the number of completions
 
-    def test_day_streak(self):
-        pass
-
-    def test_reset_streak(self):
-        pass
-
-    def test_check_records(self):
-        pass
-
-    def test_delete_habit(self, db, name='call mom'):
-        db.drop_habit((name, ))
-        data = analysis.list_all_habits(db)
-        assert data == [('brush teeth', 'daily', 0, 0, 0, 28), ('meditate', 'daily', 0, 0, 0, 60),
-                        ('sleep', 'daily', 0, 0, 0, 30), ('clean bathroom', 'weekly', 0, 0, 0, 8)]  # change 0 to actual values after completion
-        assert len(data) == 4  # is it sufficient to check for length or must db entry be checked?
+    # def test_day_streak(self):
+    #     pass
+    #
+    # def test_reset_streak(self):
+    #     pass
+    #
+    # def test_check_records(self):
+    #     pass
 
 
 class TestAnalysis:
@@ -76,3 +71,13 @@ class TestAnalysis:
 
     def test_view_closest_goal(self):
         pass
+
+
+class TestDatabase:
+
+    def test_delete_habit(self, db, name='call mom'):
+        db.drop_habit((name, ))
+        data = analysis.list_all_habits(db)
+        assert data == [('brush teeth', 'daily', 0, 0, 0, 28), ('meditate', 'daily', 0, 0, 0, 60),
+                        ('sleep', 'daily', 0, 0, 0, 30), ('clean bathroom', 'weekly', 0, 0, 0, 8)]  # change 0 to actual values after completion
+        assert len(data) == 4  # is it sufficient to check for length or must db entry be checked?
