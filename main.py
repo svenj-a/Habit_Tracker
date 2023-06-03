@@ -1,11 +1,11 @@
-import questionary
 import sqlite3
 import pandas as pd
+import questionary
 from tabulate import tabulate
 
+from db import DB
 from habit import Habit
 import analysis
-from db import DB
 
 
 def cli():
@@ -149,14 +149,14 @@ def cli():
             stop = True
 
 
-def format_print(db, value):
+def format_print(db, data):
     """
     Format print statements with tabulate to return to cli
     :param db: name of the database connection
-    :param value: an object that is returned by a method or function and needs to be printed to the console
+    :param data: an object that is returned by a method or function and needs to be printed to the console
     :return:
     """
-    df = pd.DataFrame(value)
+    df = pd.DataFrame(data)
     headers = list(map(lambda x: x[0], db.cur.description))
     print(tabulate(df, headers=headers, tablefmt="grid"))
 

@@ -15,6 +15,7 @@ def list_all_habits(db):
             END,
         name
         """).fetchall()
+    print(habits)
     return habits
 
 
@@ -31,6 +32,7 @@ def list_filtered_habits(db, periodicity):
         WHERE periodicity=?
         ORDER BY name
         """, (periodicity, )).fetchall()
+    print(habits)
     return habits
 
 
@@ -47,6 +49,7 @@ def view_single_habit(db, habit):
         FROM habits
         WHERE name=?
         """, (habit, )).fetchall()
+    print(habit)
     return habit
 
 
@@ -68,6 +71,7 @@ def view_longest_streaks(db):
                 """, (period, period)).fetchall()
         for streak in streaks:
             habits.append(streak)
+            print(habits)
     return habits
 
 
@@ -90,6 +94,7 @@ def view_closest_goal(db):
                     """, (period, period)).fetchall()
         for streak in streaks:
             habits.append(streak)
+            print(habits)
     return habits
 
 
@@ -111,4 +116,5 @@ def view_established_habits(db):
                         """, (period, )).fetchall()
         for habit in established:
             habits.append(habit)
+    print(habits)
     return habits

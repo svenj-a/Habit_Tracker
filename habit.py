@@ -93,7 +93,11 @@ class Habit:
         elif timedelta < 1 and self.current_streak > 0:
             print(f"You have already completed this {self.period} habit! Try again later...")
         else:
-            self._increment_curr_streak(db, timespan)
+            self.current_streak += 1
+            self._check_records()
+            db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
+            print(f"Congratulations! You have checked off your habit '{self.name}' "
+                  f"and gained a streak of {self.current_streak} {timespan}!")
             db.add_completion(habit)
 
     def _reset_curr_streak(self, db):
@@ -107,19 +111,19 @@ class Habit:
         print(f"You broke the habit '{self.name}' and lost your day streak. "
               f"Your new streak is {self.current_streak}!")
 
-    def _increment_curr_streak(self, db, timespan):
-        """
-        Increments the current day streak in case the user checked off a habit successfully and updates the streaks if
-        necessary.
-        :param db: name of the database
-        :param timespan: the string according to the periodicity that can be inserted in formatted strings
-        :return:
-        """
-        self.current_streak += 1
-        self._check_records()
-        db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
-        print(f"Congratulations! You have checked off your habit '{self.name}' "
-              f"and gained a streak of {self.current_streak} {timespan}!")
+    # def _increment_curr_streak(self, db, timespan):
+    #     """
+    #     Increments the current day streak in case the user checked off a habit successfully and updates the streaks if
+    #     necessary.
+    #     :param db: name of the database
+    #     :param timespan: the string according to the periodicity that can be inserted in formatted strings
+    #     :return:
+    #     """
+    #     self.current_streak += 1
+    #     self._check_records()
+    #     db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
+    #     print(f"Congratulations! You have checked off your habit '{self.name}' "
+    #           f"and gained a streak of {self.current_streak} {timespan}!")
 
     def _check_records(self):
         """
