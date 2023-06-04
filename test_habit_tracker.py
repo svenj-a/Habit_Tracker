@@ -1,4 +1,5 @@
 import pytest
+from freezegun import freeze_time
 
 from db import DB
 from habit import Habit
@@ -24,9 +25,16 @@ def create_habits(db):
 
 
 @pytest.fixture(autouse=True)
-def add_completion_data(db):
-    pass
-    # add completion events with complete habit method and non-default timestamp arguments
+def completion_loop(db):  # put lists in a dict
+    completions_sleep = []
+    completions_brush_teeth = []
+    completions_clean_bathroom = []
+    completions_call_mom = []
+    completions_meditate = []
+    for date in completions_sleep:
+        @freeze_time(date)
+        def add_completion_data(name):
+            Habit.complete_habit(db, name)
 
 
 class TestHabit:

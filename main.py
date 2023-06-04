@@ -45,14 +45,13 @@ def cli():
             habit_created = False
             while not habit_created:
                 try:
-                    habit = Habit(name, desc, period, int(goal))
-                    habit.create_habit(db)
+                    Habit(name=name, desc=desc, period=period, goal=int(goal)).create_habit(db)
                     habit_created = True
                 except (ValueError, TypeError):
-                    print("Please enter an integer number!")
+                    print("Please enter an integer number as goal!")
                     goal = questionary.text("Set a final goal: ").ask()
                 except sqlite3.IntegrityError:
-                    print(f"A habit with the name {name} already exists. Please choose a different name:")
+                    print(f"A habit with the name {name} already exists. Please choose a unique name:")
                     name = questionary.text("What's the name of your new habit?").ask()
 
         elif main_menu == "Complete habit":
@@ -62,12 +61,14 @@ def cli():
             for habit in habits:
                 habit_list.append(*habit)  # the asterisk unpacks the tuple, so that habit_list truly is a list!
             try:
-                habit_name = questionary.select(
+                name = questionary.select(
                     "Which habit do you want to check off today?",
                     choices=habit_list
                 ).ask()
-                habit = Habit(habit_name)
-                habit.complete_habit(db, habit_name)
+                habit = Habit(name).fetch_habit_data(db)
+                print(habit.name, habit.desc, habit.current_streak, habit.goal)
+                habit.complete_habit(db)
+                print(habit.name, habit.desc, habit.current_streak, habit.goal)
             except ValueError:
                 print("There are no habits available! Please select a different option."
                       "You could start by creating a habit!")
