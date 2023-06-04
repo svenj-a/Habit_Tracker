@@ -55,8 +55,7 @@ def cli():
                     name = questionary.text("What's the name of your new habit?").ask()
 
         elif main_menu == "Complete habit":
-            db.cur.execute("SELECT name FROM habits ORDER BY name")
-            habits = db.cur.fetchall()
+            habits = db.cur.execute("SELECT name FROM habits ORDER BY name").fetchall()
             habit_list = []
             for habit in habits:
                 habit_list.append(*habit)  # the asterisk unpacks the tuple, so that habit_list truly is a list!
@@ -71,7 +70,7 @@ def cli():
                 print(habit.name, habit.desc, habit.current_streak, habit.goal)
             except ValueError:
                 print("There are no habits available! Please select a different option."
-                      "You could start by creating a habit!")
+                      "You could start by creating a habit!")   # check for Exceptions!
 
         elif main_menu == "Analyze habits":
             analysis_menu = questionary.select(

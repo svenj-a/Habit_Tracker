@@ -34,6 +34,7 @@ class Habit:
         """
         db.add_habit(self.name, self.desc, self.period, self.date, self.completed_total, self.current_streak,
                      self.longest_streak, self.goal)
+        return self
 
     def fetch_habit_data(self, db):
         values = db.cur.execute("""SELECT * FROM habits WHERE name=?""", (self.name,)).fetchall()[0]
@@ -56,7 +57,7 @@ class Habit:
         try:
             last = datetime.strptime(last_completed[0][0], "%Y-%m-%d %H:%M:%S.%f")
             timedelta, timespan = self._calculate_timedelta(completed, last)
-            self._day_streak(db, timedelta)
+            self._streak(db, timedelta)
         except TypeError or ValueError:
             self._first_time_completion(db)
 
@@ -81,7 +82,7 @@ class Habit:
             timespan = "month(s)"
         return timedelta, timespan
 
-    def _day_streak(self, db, timedelta):
+    def _streak(self, db, timedelta):
         """
         Checks whether the habit is completed, broken or unavailable (in case it was already completed in the current
         period) and calls the respective helper methods.
@@ -105,6 +106,7 @@ class Habit:
         # print(f"You broke the habit {habit.name}! Your streak was reset to 1. Try again, you can do it!!")
 
     def _completion_cooldown(self):
+        # update timestamp of last completion entry
         return self
         # print(f"You have already completed this {habit.period} habit! Try again later...")
 
@@ -126,7 +128,7 @@ class Habit:
         """
         if self.current_streak > self.longest_streak:
             self.longest_streak = self.current_streak
-            return self
+        return self
 
     def _check_goal(self):
         if self.longest_streak < self.goal:
