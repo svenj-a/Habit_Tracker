@@ -71,7 +71,7 @@ def view_longest_streaks(db):
                 """, (period, period)).fetchall()
         for streak in streaks:
             habits.append(streak)
-            print(habits)
+    print(habits)
     return habits
 
 
@@ -94,7 +94,7 @@ def view_closest_goal(db):
                     """, (period, period)).fetchall()
         for streak in streaks:
             habits.append(streak)
-            print(habits)
+    print(habits)
     return habits
 
 
