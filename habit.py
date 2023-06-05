@@ -60,6 +60,7 @@ class Habit:
             self._streak(db, timedelta)
         except TypeError or ValueError:
             self._first_time_completion(db)
+        return self
 
     def _first_time_completion(self, db):
         db.add_completion(self.name)
