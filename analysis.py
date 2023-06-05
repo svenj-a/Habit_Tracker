@@ -1,6 +1,3 @@
-import pandas as pd
-from tabulate import tabulate
-
 
 def list_all_habits(db):
     """
@@ -8,7 +5,7 @@ def list_all_habits(db):
     :param db: name of the database
     :return:
     """
-    all_habits = db.cur.execute("""
+    habits = db.cur.execute("""
         SELECT name, periodicity, completed_total, current_streak, longest_streak, final_goal
         FROM habits
         ORDER BY CASE
@@ -18,9 +15,8 @@ def list_all_habits(db):
             END,
         name
         """).fetchall()
-    habit_df = pd.DataFrame(all_habits)
-    headers = list(map(lambda x: x[0], db.cur.description))
-    print(tabulate(habit_df, headers=headers, tablefmt="outline"))
+    print(habits)
+    return habits
 
 
 def list_filtered_habits(db, periodicity):
@@ -30,15 +26,14 @@ def list_filtered_habits(db, periodicity):
     :param periodicity: periodicity for which the listed habits are filtered; selected by user
     :return:
     """
-    filtered_habits = db.cur.execute("""
+    habits = db.cur.execute("""
         SELECT name, completed_total, current_streak, longest_streak, final_goal
         FROM habits
         WHERE periodicity=?
         ORDER BY name
         """, (periodicity, )).fetchall()
-    habit_df = pd.DataFrame(filtered_habits)
-    headers = list(map(lambda x: x[0], db.cur.description))
-    print(tabulate(habit_df, headers=headers, tablefmt="outline"))
+    print(habits)
+    return habits
 
 
 def view_single_habit(db, habit):
@@ -48,15 +43,14 @@ def view_single_habit(db, habit):
     :param habit: name of the habit that is to be displayed
     :return: database entry for the respective habit
     """
-    data = db.cur.execute("""
+    habit = db.cur.execute("""
         SELECT name, description, periodicity, current_streak, longest_streak, final_goal, completed_total,
             creation_date
         FROM habits
         WHERE name=?
         """, (habit, )).fetchall()
-    df = pd.DataFrame(data)
-    headers = list(map(lambda x: x[0], db.cur.description))
-    print(tabulate(df, headers=headers, tablefmt="outline"))
+    print(habit)
+    return habit
 
 
 def view_longest_streaks(db):
@@ -77,10 +71,8 @@ def view_longest_streaks(db):
                 """, (period, period)).fetchall()
         for streak in streaks:
             habits.append(streak)
-    df = pd.DataFrame(habits)
-    headers = list(map(lambda x: x[0], db.cur.description))
-    print("\nYou have obtained the longest streak for these habits:\n")
-    print(tabulate(df, headers=headers, tablefmt="grid"))
+    print(habits)
+    return habits
 
 
 def view_closest_goal(db):
@@ -93,15 +85,36 @@ def view_closest_goal(db):
     habits = []
     for period in periods:
         streaks = db.cur.execute("""
-                    SELECT ALL name, periodicity, longest_streak, (final_goal-longest_streak) AS difference, final_goal
+                    SELECT ALL name, periodicity, current_streak, (final_goal-current_streak) AS difference, final_goal
                     FROM habits
-                    WHERE periodicity = ?
-                    AND difference = (SELECT MIN(final_goal-longest_streak) FROM habits WHERE periodicity = ?)
+                    WHERE longest_streak < final_goal
+                    AND periodicity = ?
+                    AND difference = (SELECT MIN(final_goal-current_streak) FROM habits WHERE periodicity = ?)
                     ORDER BY name
                     """, (period, period)).fetchall()
         for streak in streaks:
             habits.append(streak)
-    df = pd.DataFrame(habits)
-    headers = list(map(lambda x: x[0], db.cur.description))
-    print("\nThese habits are closest to your final goal:\n")
-    print(tabulate(df, headers=headers, tablefmt="grid"))
+    print(habits)
+    return habits
+
+
+def view_established_habits(db):
+    """
+    Return all habits that are already established, i.e. where the final goal has been reached in one streak.
+    :param db: name of the database
+    :return:
+    """
+    periods = ["daily", "weekly", "monthly"]
+    habits = []
+    for period in periods:
+        established = db.cur.execute("""
+                        SELECT ALL name, periodicity, current_streak, longest_streak, final_goal
+                        FROM habits
+                        WHERE periodicity = ?
+                        AND longest_streak >= final_goal
+                        ORDER BY periodicity, name
+                        """, (period, )).fetchall()
+        for habit in established:
+            habits.append(habit)
+    print(habits)
+    return habits
