@@ -38,9 +38,11 @@ class Habit:
 
     def fetch_habit_data(self, db):
         values = db.cur.execute("""SELECT * FROM habits WHERE name=?""", (self.name,)).fetchall()[0]
+        # print(values)
         habit_attributes = []
         for value in values:
             habit_attributes.append(value)
+        # print(habit_attributes)
         habit = Habit(*habit_attributes)
         return habit
 
@@ -55,16 +57,21 @@ class Habit:
         # completed = datetime.today()
         last_completed = db.cur.execute("""SELECT MAX(completion_date) FROM completions WHERE name=?""",
                                         (self.name,)).fetchall()
+        # print(last_completed)
         try:
             last = datetime.strptime(last_completed[0][0], "%Y-%m-%d %H:%M:%S.%f")
+            # print(completed)
+            # print(last)
             timedelta, timespan = self._calculate_timedelta(completed, last)
-            self._streak(db, timedelta)
+            # print(timedelta)
+            self._streak(db, timedelta, completed)
+            # print(self.name, self.completed_total)
         except TypeError or ValueError:
-            self._first_time_completion(db)
+            self._first_time_completion(db, completed)
         return self
 
-    def _first_time_completion(self, db):
-        db.add_completion(self.name)
+    def _first_time_completion(self, db, date):
+        db.add_completion(self.name, date)
         self.current_streak, self.longest_streak, self.completed_total = 1, 1, 1
         db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
         return self
@@ -74,17 +81,17 @@ class Habit:
         timedelta = None
         timespan = None
         if self.period == "daily":
-            timedelta = (completed.day - last.day)
+            timedelta = (last.day - completed.day)
             timespan = "day(s)"
         elif self.period == "weekly":
-            timedelta = (completed.isocalendar()[1] - last.isocalendar()[1])
+            timedelta = (last.isocalendar()[1] - completed.isocalendar()[1])
             timespan = "week(s)"
         elif self.period == "monthly":
-            timedelta = (completed.month - last.month)
+            timedelta = (last.month - completed.month)
             timespan = "month(s)"
         return timedelta, timespan
 
-    def _streak(self, db, timedelta):
+    def _streak(self, db, timedelta, date):
         """
         Checks whether the habit is completed, broken or unavailable (in case it was already completed in the current
         period) and calls the respective helper methods.
@@ -93,14 +100,14 @@ class Habit:
         :return:
         """
         if timedelta > 1:
-            self._break_habit(db)
+            self._break_habit(db, date)
         elif timedelta < 1:
             self._completion_cooldown()
         else:
-            self._check_off_habit(db)
+            self._check_off_habit(db, date)
 
-    def _break_habit(self, db):
-        db.add_completion(self)
+    def _break_habit(self, db, date):
+        db.add_completion(self.name, date)
         self.completed_total += 1
         self.current_streak = 1
         db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
@@ -112,8 +119,8 @@ class Habit:
         return self
         # print(f"You have already completed this {habit.period} habit! Try again later...")
 
-    def _check_off_habit(self, db):
-        db.add_completion(self)
+    def _check_off_habit(self, db, date):
+        db.add_completion(self.name, date)
         self.completed_total += 1
         self.current_streak += 1
         self._check_longest_streak()

@@ -1,7 +1,20 @@
+from datetime import datetime
 from habit import Habit
 from db import DB
 
 db = DB(":memory:")
+db.cur.close()
+db = DB(":memory:")
+Habit(name='brush teeth', desc='Brush teeth every morning.', date="2023-04-10 08:06:02.066485", period='daily',
+      goal=28).create_habit(db)
+Habit(name='sleep', desc='Sleep at least 7h per day.', date="2023-04-10 08:30:05.845662", period='daily',
+      goal=30, ).create_habit(db)
+Habit(name='meditate', desc='Meditate at least 10 minutes every day after lunch.',
+      date="2023-04-13 11:46:33.765130", period='daily', goal=60).create_habit(db)
+Habit(name='clean bathroom', desc='Clean the bathroom including toilet, shower, and sink.',
+      date="2023-04-15 17:21:44.654321", period='weekly', goal=8).create_habit(db)
+Habit(name='call mom', desc='Call my mother once a month...', period='monthly', date="2023-04-17 22:05:24.756612",
+      goal=4).create_habit(db)
 
 predefined_habits = {"sleep": ["2023-04-10 07:54:14", "2023-04-11 07:20:28", "2023-04-13 06:51:14",
                                "2023-04-14 07:39:52", "2023-04-15 06:49:50", "2023-04-16 06:25:39",
@@ -31,8 +44,12 @@ predefined_habits = {"sleep": ["2023-04-10 07:54:14", "2023-04-11 07:20:28", "20
                      "clean bathroom": ["2023-04-16 15:49:41", "2023-04-22 17:10:29", "2023-04-28 15:08:26",
                                         "2023-05-07 15:35:54"],
                      "call mom": ["2023-04-19 19:26:45", "2023-05-09 19:29:09"]}
+
 for habit, dates in predefined_habits.items():
     habit = Habit(habit).fetch_habit_data(db)
-    for date in dates:
-        habit.complete_habit(db, date)
-        print(habit.name, date, habit.completed_total)
+    if isinstance(dates, list):
+        for date in dates:
+            habit.complete_habit(db, datetime.strptime(date, "%Y-%m-%d %H:%M:%S"))
+            print(habit.name, date, habit.completed_total)
+
+db.cur.close()

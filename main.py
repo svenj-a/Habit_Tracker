@@ -59,18 +59,18 @@ def cli():
             habit_list = []
             for habit in habits:
                 habit_list.append(*habit)  # the asterisk unpacks the tuple, so that habit_list truly is a list!
-            try:
-                name = questionary.select(
-                    "Which habit do you want to check off today?",
-                    choices=habit_list
-                ).ask()
-                habit = Habit(name).fetch_habit_data(db)
-                print(habit.name, habit.desc, habit.current_streak, habit.goal)
-                habit.complete_habit(db)
-                print(habit.name, habit.desc, habit.current_streak, habit.goal)
-            except ValueError:
-                print("There are no habits available! Please select a different option."
-                      "You could start by creating a habit!")   # check for Exceptions!
+            # try:
+            name = questionary.select(
+                "Which habit do you want to check off today?",
+                choices=habit_list
+            ).ask()
+            habit = Habit(name).fetch_habit_data(db)
+            # print(habit.name, habit.desc, habit.current_streak, habit.goal)
+            habit.complete_habit(db)
+            # print(habit.name, habit.desc, habit.current_streak, habit.goal)
+            # except ValueError:
+            #     print("There are no habits available! Please select a different option."
+            #           "You could start by creating a habit!")   # check if exception handling is necessary here!
 
         elif main_menu == "Analyze habits":
             analysis_menu = questionary.select(

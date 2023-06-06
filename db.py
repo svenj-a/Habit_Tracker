@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import sqlite3
 
 
@@ -18,13 +18,12 @@ class DB:
         Initializes the database.
         :return: returns the db
         """
-        self._create_tables(self.db)
+        self._create_tables()
         return self.db
 
-    def _create_tables(self, db):
+    def _create_tables(self):
         """
         Checks whether db tables already exists for a new db instance and creates them if not.
-        :param db: name of the database
         :return:
         """
         # cur = db.cursor()  # try to avoid cursor and commit in every function
@@ -47,7 +46,7 @@ class DB:
                                     ON DELETE CASCADE
                                     ON UPDATE NO ACTION 
                             )""")
-        db.commit()
+        self.db.commit()
 
     def add_habit(self, name, desc, period, creation_date, completed_total, current_streak, longest_streak, goal):
         """
@@ -67,13 +66,13 @@ class DB:
         self.cur.execute("""INSERT INTO habits VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", habit_attributes)
         self.db.commit()
 
-    def add_completion(self, habit):
+    def add_completion(self, habit, date=datetime.today()):
         """
         Adds a new entry to the completions table and saves a timestamp for each habit that is checked off.
         :param habit: name of the habit that is checked off
+        :param date:
         :return:
         """
-        date = datetime.datetime.today()
         self.cur.execute("""INSERT INTO completions (name, completion_date) VALUES (?, ?)""", (habit, date))
         self.db.commit()
 
