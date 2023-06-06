@@ -44,14 +44,15 @@ class Habit:
         habit = Habit(*habit_attributes)
         return habit
 
-    def complete_habit(self, db):
+    def complete_habit(self, db, completed=datetime.today()):
         """
         Increments the current day streak for the habit.
         :param db: an initialized sqlite3 database connection
+        :param completed: current completion date, default is the current time - can be changed for testing purposes
         :return:
         """
         # habit = self.fetch_habit_data(db, name)
-        completed = datetime.today()
+        # completed = datetime.today()
         last_completed = db.cur.execute("""SELECT MAX(completion_date) FROM completions WHERE name=?""",
                                         (self.name,)).fetchall()
         try:
