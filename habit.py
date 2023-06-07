@@ -38,11 +38,9 @@ class Habit:
 
     def fetch_habit_data(self, db):
         values = db.cur.execute("""SELECT * FROM habits WHERE name=?""", (self.name,)).fetchall()[0]
-        # print(values)
         habit_attributes = []
         for value in values:
             habit_attributes.append(value)
-        # print(habit_attributes)
         habit = Habit(*habit_attributes)
         return habit
 
@@ -53,19 +51,12 @@ class Habit:
         :param completed: current completion date, default is the current time - can be changed for testing purposes
         :return:
         """
-        # habit = self.fetch_habit_data(db, name)
-        # completed = datetime.today()
         last_completed = db.cur.execute("""SELECT MAX(completion_date) FROM completions WHERE name=?""",
                                         (self.name,)).fetchall()
-        # print(last_completed)
         try:
             last = datetime.strptime(last_completed[0][0], "%Y-%m-%d %H:%M:%S.%f")
-            # print(completed)
-            # print(last)
             timedelta, timespan = self._calculate_timedelta(completed, last)
-            # print(timedelta)
-            self._streak(db, timedelta, completed)
-            # print(self.name, self.completed_total)
+            self._streak(db, timedelta, timespan, completed)
         except TypeError or ValueError:
             self._first_time_completion(db, completed)
         return self
@@ -74,8 +65,8 @@ class Habit:
         db.add_completion(self.name, date)
         self.current_streak, self.longest_streak, self.completed_total = 1, 1, 1
         db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
+        print(f"Congratulations, you completed the habit {self.name} for the first time!")
         return self
-        # print(f"Congratulations, you completed the habit {habit.name} for the first time!"
 
     def _calculate_timedelta(self, completed, last):
         timedelta = None
@@ -91,7 +82,7 @@ class Habit:
             timespan = "month(s)"
         return timedelta, timespan
 
-    def _streak(self, db, timedelta, date):
+    def _streak(self, db, timedelta, timespan, date):
         """
         Checks whether the habit is completed, broken or unavailable (in case it was already completed in the current
         period) and calls the respective helper methods.
@@ -104,31 +95,31 @@ class Habit:
         elif timedelta < 1:
             self._completion_cooldown()
         else:
-            self._check_off_habit(db, date)
+            self._check_off_habit(db, date, timespan)
 
     def _break_habit(self, db, date):
         db.add_completion(self.name, date)
         self.completed_total += 1
         self.current_streak = 1
         db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
+        print(f"You broke the habit {self.name}! Your streak was reset to 1. Try again, you can do it!!")
         return self
-        # print(f"You broke the habit {habit.name}! Your streak was reset to 1. Try again, you can do it!!")
 
     def _completion_cooldown(self):
         # update timestamp of last completion entry
+        print(f"You have already completed this {self.period} habit! Try again later...")
         return self
-        # print(f"You have already completed this {habit.period} habit! Try again later...")
 
-    def _check_off_habit(self, db, date):
+    def _check_off_habit(self, db, date, timespan):
         db.add_completion(self.name, date)
         self.completed_total += 1
         self.current_streak += 1
         self._check_longest_streak()
         self._check_goal()
         db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
+        print(f"Congratulations! You have checked off your habit '{self.name}' "
+              f"and gained a streak of {self.current_streak} {timespan}!")
         return self
-        # print(f"Congratulations! You have checked off your habit '{self.name}' "
-        #       f"and gained a streak of {self.current_streak} {timespan}!")
 
     def _check_longest_streak(self):
         """
@@ -142,18 +133,8 @@ class Habit:
     def _check_goal(self):
         if self.longest_streak < self.goal:
             to_go = self.goal - self.longest_streak
+            print(f"Keep it going, you have {to_go} time(s) to go until you reach your final goal!")
             return to_go
-            # print(f"Keep it going, you have {to_go} time(s) to go until you reach your final goal!")
         elif self.goal == self.longest_streak:
+            print(f"Congratulations, you reached your final goal for the habit '{self.name}'")
             return self.goal
-            # print(f"Congratulations, you reached your final goal for the habit '{habit.name}'")
-
-    # @staticmethod
-    # def delete_habit(db, name):
-    #     """
-    #     Call to the database method to delete a habit.
-    #     :param db: name of the database
-    #     :param name: name of the habit to be deleted
-    #     :return:
-    #     """
-    #     db.drop_habit(name)

@@ -65,9 +65,7 @@ def cli():
                 choices=habit_list
             ).ask()
             habit = Habit(name).fetch_habit_data(db)
-            # print(habit.name, habit.desc, habit.current_streak, habit.goal)
             habit.complete_habit(db)
-            # print(habit.name, habit.desc, habit.current_streak, habit.goal)
             # except ValueError:
             #     print("There are no habits available! Please select a different option."
             #           "You could start by creating a habit!")   # check if exception handling is necessary here!
@@ -81,14 +79,14 @@ def cli():
 
             if analysis_menu == "View all habits":
                 habits = analysis.list_all_habits(db)
-                format_print(db, habits)
+                format_print_outline(db, habits)
 
             elif analysis_menu == "View habits with periodicity ...":
                 period = questionary.select(
                     "Which filter do you want to apply?", choices=["daily", "weekly", "monthly"]
                 ).ask()
                 habits = analysis.list_filtered_habits(db, period)
-                format_print(db, habits)
+                format_print_outline(db, habits)
 
             elif analysis_menu == "View one habit ...":
                 habits = db.cur.execute("SELECT name FROM habits ORDER BY name").fetchall()
@@ -100,8 +98,8 @@ def cli():
                         "Which habit do you want to display in detail?",
                         choices=habit_list
                     ).ask()
-                    habit = analysis.view_single_habit(db, habit_name)  # turn argument into type tuple --> (arg,)
-                    format_print(db, habit)
+                    habit = analysis.view_single_habit(db, habit_name)  # turn argument back into type tuple --> (arg,)
+                    format_print_grid(db, habit)
                 except ValueError:
                     print("There are no habits available! Please select a different option."
                           "You could for example create a habit!")
@@ -114,11 +112,11 @@ def cli():
                 if record == "View habit with the longest day streak!":
                     lon_str = analysis.view_longest_streaks(db)
                     print("\nYou have obtained the longest streak for these habits:\n")
-                    format_print(db, lon_str)
+                    format_print_grid(db, lon_str)
                 elif record == "View habit with the closest goal!":
                     cl_goal = analysis.view_closest_goal(db)
                     print("\nThese habits are closest to your final goal:\n")
-                    format_print(db, cl_goal)
+                    format_print_grid(db, cl_goal)
                 # elif record == "both":
                 #     analysis.view_longest_streaks(db)
                 #     analysis.view_closest_goal(db)
@@ -126,14 +124,14 @@ def cli():
             elif analysis_menu == "View established habits":
                 habits = analysis.view_established_habits(db)
                 print("\nThese habits are already established:\n")
-                format_print(db, habits)
+                format_print_grid(db, habits)
 
         elif main_menu == "Delete habit":
             db.cur.execute("SELECT name FROM habits ORDER BY name")
             habits = db.cur.fetchall()
             habit_list = []
             for habit in habits:
-                habit_list.append(*habit)   # the asterisk unpacks the tuple, so that habit_list truly is a list!
+                habit_list.append(*habit)
             try:
                 habit_name = questionary.select(
                     "Which habit do you want to delete?",
@@ -149,7 +147,7 @@ def cli():
             stop = True
 
 
-def format_print(db, data):
+def format_print_grid(db, data):
     """
     Format print statements with tabulate to return to cli
     :param db: name of the database connection
@@ -159,6 +157,18 @@ def format_print(db, data):
     df = pd.DataFrame(data)
     headers = list(map(lambda x: x[0], db.cur.description))
     print(tabulate(df, headers=headers, tablefmt="grid"))
+
+
+def format_print_outline(db, data):
+    """
+
+    :param db:
+    :param data:
+    :return:
+    """
+    df = pd.DataFrame(data)
+    headers = list(map(lambda x: x[0], db.cur.description))
+    print(tabulate(df, headers=headers, tablefmt="outline"))
 
 
 if __name__ == '__main__':

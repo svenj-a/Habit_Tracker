@@ -15,7 +15,6 @@ def list_all_habits(db):
             END,
         name
         """).fetchall()
-    print(habits)
     return habits
 
 
@@ -32,25 +31,23 @@ def list_filtered_habits(db, periodicity):
         WHERE periodicity=?
         ORDER BY name
         """, (periodicity, )).fetchall()
-    print(habits)
     return habits
 
 
-def view_single_habit(db, habit):
+def view_single_habit(db, habit_name):
     """
     Displays the database entry for any single habit.
     :param db: an initialized sqlite3 database connection
-    :param habit: name of the habit that is to be displayed
+    :param habit_name: name of the habit that is to be displayed
     :return: database entry for the respective habit
     """
-    habit = db.cur.execute("""
+    habit_data = db.cur.execute("""
         SELECT name, description, periodicity, current_streak, longest_streak, final_goal, completed_total,
             creation_date
         FROM habits
         WHERE name=?
-        """, (habit, )).fetchall()
-    print(habit)
-    return habit
+        """, (habit_name, )).fetchall()
+    return habit_data
 
 
 def view_longest_streaks(db):
@@ -71,7 +68,6 @@ def view_longest_streaks(db):
                 """, (period, period)).fetchall()
         for streak in streaks:
             habits.append(streak)
-    print(habits)
     return habits
 
 
@@ -94,7 +90,6 @@ def view_closest_goal(db):
                     """, (period, period)).fetchall()
         for streak in streaks:
             habits.append(streak)
-    print(habits)
     return habits
 
 
@@ -116,5 +111,4 @@ def view_established_habits(db):
                         """, (period, )).fetchall()
         for habit in established:
             habits.append(habit)
-    print(habits)
     return habits
