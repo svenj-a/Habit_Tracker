@@ -38,6 +38,7 @@ class Habit:
 
     def fetch_habit_data(self, db):
         values = db.cur.execute("""SELECT * FROM habits WHERE name=?""", (self.name,)).fetchall()[0]
+        print(values)
         habit_attributes = []
         for value in values:
             habit_attributes.append(value)
@@ -53,9 +54,11 @@ class Habit:
         """
         last_completed = db.cur.execute("""SELECT MAX(completion_date) FROM completions WHERE name=?""",
                                         (self.name,)).fetchall()
+        # print("last_completed: ", last_completed)
         try:
             last = datetime.strptime(last_completed[0][0], "%Y-%m-%d %H:%M:%S.%f")
             timedelta, timespan = self._calculate_timedelta(completed, last)
+            # print("timedelta: ", timedelta, "timespan: ", timespan)
             self._streak(db, timedelta, timespan, completed)
         except TypeError or ValueError:
             self._first_time_completion(db, completed)
@@ -65,20 +68,20 @@ class Habit:
         db.add_completion(self.name, date)
         self.current_streak, self.longest_streak, self.completed_total = 1, 1, 1
         db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
-        print(f"Congratulations, you completed the habit {self.name} for the first time!")
+        print(f"Congratulations, you completed the habit '{self.name}' for the first time!")
         return self
 
-    def _calculate_timedelta(self, completed, last):
+    def _calculate_timedelta(self, completed, last_completed):
         timedelta = None
         timespan = None
         if self.period == "daily":
-            timedelta = (last.day - completed.day)
+            timedelta = (completed.day - last_completed.day)
             timespan = "day(s)"
         elif self.period == "weekly":
-            timedelta = (last.isocalendar()[1] - completed.isocalendar()[1])
+            timedelta = (completed.isocalendar()[1] - last_completed.isocalendar()[1])
             timespan = "week(s)"
         elif self.period == "monthly":
-            timedelta = (last.month - completed.month)
+            timedelta = (completed.month - last_completed.month)
             timespan = "month(s)"
         return timedelta, timespan
 
@@ -102,7 +105,7 @@ class Habit:
         self.completed_total += 1
         self.current_streak = 1
         db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
-        print(f"You broke the habit {self.name}! Your streak was reset to 1. Try again, you can do it!!")
+        print(f"You broke the habit '{self.name}'! Your streak was reset to 1. Try again, you can do it!!")
         return self
 
     def _completion_cooldown(self):
