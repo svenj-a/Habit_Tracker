@@ -35,7 +35,8 @@ class DB:
                             completed_total INTEGER,
                             current_streak INTEGER,
                             longest_streak INTEGER,
-                            final_goal INTEGER
+                            final_goal INTEGER,
+                            established BOOLEAN
                             )""")
         self.cur.execute("""CREATE TABLE IF NOT EXISTS completions (
                             name TEXT,
@@ -48,7 +49,8 @@ class DB:
                             )""")
         self.db.commit()
 
-    def add_habit(self, name, desc, period, creation_date, completed_total, current_streak, longest_streak, goal):
+    def add_habit(self, name, desc, period, creation_date, completed_total, current_streak, longest_streak, goal,
+                  goal_reached):
         """
         Adds a new entity (a new row) to the habits table.
         :param name: name of the habit (str); provided by user input
@@ -60,10 +62,12 @@ class DB:
                                 without breaks (int)
         :param longest_streak: saves the longest day streak that was ever reached for a habit as "high score" (int)
         :param goal: number of times a habit is to be completed (int); provided by user input
+        :param goal_reached: boolean value that indicates where a habit is established
         :return:
         """
-        habit_attributes = [name, desc, period, creation_date, completed_total, current_streak, longest_streak, goal]
-        self.cur.execute("""INSERT INTO habits VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", habit_attributes)
+        habit_attributes = [name, desc, period, creation_date, completed_total, current_streak, longest_streak, goal,
+                            goal_reached]
+        self.cur.execute("""INSERT INTO habits VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", habit_attributes)
         self.db.commit()
 
     def add_completion(self, habit, date=datetime.today()):
@@ -88,6 +92,10 @@ class DB:
         self.cur.execute("""UPDATE habits SET current_streak=? WHERE name=?""", (curr_str, name))
         self.cur.execute("""UPDATE habits SET longest_streak=? WHERE name=?""", (lon_str, name))
         self.cur.execute("""UPDATE habits SET completed_total=? WHERE name=?""", (comp_tot, name))
+        self.db.commit()
+
+    def update_established(self, goal_reached, name):
+        self.cur.execute("""UPDATE habits SET established=? WHERE name=?""", (goal_reached, name))
         self.db.commit()
 
     def drop_habit(self, name):

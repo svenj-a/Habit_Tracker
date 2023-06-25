@@ -4,7 +4,7 @@ from datetime import datetime
 class Habit:
 
     def __init__(self, name, desc="", period="daily", date=datetime.today(), completed_total=0, cur_streak=0,
-                 lon_streak=0, goal=100):
+                 lon_streak=0, goal=100, goal_reached=False):
         """
         The Habit class specifies all habit attributes. It can create and complete habits.
         Helper methods are included to break down the different steps of the complete_habit() method.
@@ -25,6 +25,7 @@ class Habit:
         self.current_streak = cur_streak
         self.longest_streak = lon_streak
         self.goal = goal
+        self.goal_reached = goal_reached
 
     def create_habit(self, db):
         """
@@ -33,7 +34,7 @@ class Habit:
         :return:
         """
         db.add_habit(self.name, self.desc, self.period, self.date, self.completed_total, self.current_streak,
-                     self.longest_streak, self.goal)
+                     self.longest_streak, self.goal, self.goal_reached)
         return self
 
     def fetch_habit_data(self, db):
@@ -42,6 +43,7 @@ class Habit:
         habit_attributes = []
         for value in values:
             habit_attributes.append(value)
+        print(habit_attributes)
         habit = Habit(*habit_attributes)
         return habit
 
@@ -117,8 +119,10 @@ class Habit:
         db.add_completion(self.name, date)
         self.completed_total += 1
         self.current_streak += 1
+        print(self.longest_streak)
         self._check_longest_streak()
-        self._check_goal()
+        print(self.longest_streak)
+        self._check_goal(db)
         db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
         print(f"Congratulations! You have checked off your habit '{self.name}' "
               f"and gained a streak of {self.current_streak} {timespan}!")
@@ -133,11 +137,18 @@ class Habit:
             self.longest_streak = self.current_streak
         return self
 
-    def _check_goal(self):
+    def _check_goal(self, db):
         if self.longest_streak < self.goal:
             to_go = self.goal - self.longest_streak
             print(f"Keep it going, you have {to_go} time(s) to go until you reach your final goal!")
-            return to_go
+            return self
         elif self.goal == self.longest_streak:
+            self.goal_reached = True
+            db.update_established(self.goal_reached, self.name)
             print(f"Congratulations, you reached your final goal for the habit '{self.name}'")
-            return self.goal
+            return self
+        # else:
+        #     self.goal_reached = True
+        #     db.update_established(self.goal_reached, self.name)
+        #     print(f"Congratulations, your habit is established! Keep it going!")
+        #     return self

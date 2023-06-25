@@ -1,4 +1,3 @@
-
 def list_all_habits(db):
     """
     Prints a list of all habits that are currently stored in the database.
@@ -6,7 +5,7 @@ def list_all_habits(db):
     :return:
     """
     habits = db.cur.execute("""
-        SELECT name, periodicity, completed_total, current_streak, longest_streak, final_goal
+        SELECT name, periodicity, completed_total, current_streak, longest_streak, final_goal, established
         FROM habits
         ORDER BY CASE
             WHEN periodicity = 'daily' THEN 1
@@ -26,7 +25,7 @@ def list_filtered_habits(db, periodicity):
     :return:
     """
     habits = db.cur.execute("""
-        SELECT name, completed_total, current_streak, longest_streak, final_goal
+        SELECT name, completed_total, current_streak, longest_streak, final_goal, established
         FROM habits
         WHERE periodicity=?
         ORDER BY name
@@ -42,7 +41,7 @@ def view_single_habit(db, habit_name):
     :return: database entry for the respective habit
     """
     habit_data = db.cur.execute("""
-        SELECT name, description, periodicity, current_streak, longest_streak, final_goal, completed_total,
+        SELECT name, description, periodicity, completed_total, current_streak, longest_streak, final_goal, established,
             creation_date
         FROM habits
         WHERE name=?
@@ -60,7 +59,7 @@ def view_longest_streaks(db):
     habits = []
     for period in periods:
         streaks = db.cur.execute("""
-                SELECT ALL name, periodicity, longest_streak
+                SELECT ALL name, periodicity, longest_streak, established
                 FROM habits
                 WHERE periodicity = ?
                 AND longest_streak = (SELECT MAX(longest_streak) FROM habits WHERE periodicity = ?)
@@ -103,12 +102,12 @@ def view_established_habits(db):
     habits = []
     for period in periods:
         established = db.cur.execute("""
-                        SELECT ALL name, periodicity, current_streak, longest_streak, final_goal
+                        SELECT ALL name, periodicity, completed_total, current_streak, longest_streak, final_goal
                         FROM habits
                         WHERE periodicity = ?
-                        AND longest_streak >= final_goal
+                        AND established = ?
                         ORDER BY periodicity, name
-                        """, (period, )).fetchall()
+                        """, (period, True)).fetchall()
         for habit in established:
             habits.append(habit)
     return habits
