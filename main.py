@@ -9,22 +9,13 @@ import analysis
 
 
 def cli():
+    """
+    Main loop of the habit tracker program.
+    """
+
     db = DB()
 
-    # delete the following block after development is completed or put in try except to create dummy data:
-    # habit1 = Habit('sleep', 'Sleep at least 7h per day.', 'daily', 30)
-    # habit1.create_habit(db)
-    # habit2 = Habit('brush teeth', 'Brush teeth every morning.', 'daily', 28)
-    # habit2.create_habit(db)
-    # habit3 = Habit('clean bathroom', 'Clean the bathroom every week including toilet, shower, and sink.', 'weekly', 8)
-    # habit3.create_habit(db)
-    # habit4 = Habit('call mom', 'Call my mother once a month...', 'monthly', 4)
-    # habit4.create_habit(db)
-    # habit5 = Habit('meditate', 'Meditate at least 10 minutes every day after lunch.', 'daily', 60)
-    # habit5.create_habit(db)
-
     stop = False
-
     while not stop:
 
         main_menu = questionary.select(
@@ -65,12 +56,10 @@ def cli():
                     choices=habit_list
                 ).ask()
                 habit = Habit(name).fetch_habit_data(db)
-                print(habit.name, habit.desc, habit.current_streak, habit.goal)
                 habit.complete_habit(db)
-                print(habit.name, habit.desc, habit.current_streak, habit.goal)
             except ValueError:
                 print("There are no habits available! Please select a different option."
-                      "You could start by creating a habit!")   # check for Exceptions!
+                      "You could start by creating a habit!")   # exception handling in case there are no habits
 
         elif main_menu == "Analyze habits":
             analysis_menu = questionary.select(
@@ -81,14 +70,14 @@ def cli():
 
             if analysis_menu == "View all habits":
                 habits = analysis.list_all_habits(db)
-                format_print(db, habits)
+                format_print_outline(db, habits)
 
             elif analysis_menu == "View habits with periodicity ...":
                 period = questionary.select(
                     "Which filter do you want to apply?", choices=["daily", "weekly", "monthly"]
                 ).ask()
                 habits = analysis.list_filtered_habits(db, period)
-                format_print(db, habits)
+                format_print_outline(db, habits)
 
             elif analysis_menu == "View one habit ...":
                 habits = db.cur.execute("SELECT name FROM habits ORDER BY name").fetchall()
@@ -100,8 +89,8 @@ def cli():
                         "Which habit do you want to display in detail?",
                         choices=habit_list
                     ).ask()
-                    habit = analysis.view_single_habit(db, habit_name)  # turn argument into type tuple --> (arg,)
-                    format_print(db, habit)
+                    habit = analysis.view_single_habit(db, habit_name)  # turn argument back into type tuple --> (arg,)
+                    format_print_grid(db, habit)
                 except ValueError:
                     print("There are no habits available! Please select a different option."
                           "You could for example create a habit!")
@@ -109,31 +98,27 @@ def cli():
             elif analysis_menu == "View personal records":
                 record = questionary.select(
                     "Please select what you want to display:",
-                    choices=["View habit with the longest day streak!", "View habit with the closest goal!"]  # "both"
+                    choices=["View habits with the longest day streak!", "View habits with the closest goal!"]
                 ).ask()
-                if record == "View habit with the longest day streak!":
+                if record == "View habits with the longest day streak!":
                     lon_str = analysis.view_longest_streaks(db)
                     print("\nYou have obtained the longest streak for these habits:\n")
-                    format_print(db, lon_str)
-                elif record == "View habit with the closest goal!":
+                    format_print_grid(db, lon_str)
+                elif record == "View habits with the closest goal!":
                     cl_goal = analysis.view_closest_goal(db)
                     print("\nThese habits are closest to your final goal:\n")
-                    format_print(db, cl_goal)
-                # elif record == "both":
-                #     analysis.view_longest_streaks(db)
-                #     analysis.view_closest_goal(db)
+                    format_print_grid(db, cl_goal)
 
             elif analysis_menu == "View established habits":
                 habits = analysis.view_established_habits(db)
                 print("\nThese habits are already established:\n")
-                format_print(db, habits)
+                format_print_grid(db, habits)
 
         elif main_menu == "Delete habit":
-            db.cur.execute("SELECT name FROM habits ORDER BY name")
-            habits = db.cur.fetchall()
+            habits = db.cur.execute("SELECT name FROM habits ORDER BY name").fetchall()
             habit_list = []
             for habit in habits:
-                habit_list.append(*habit)   # the asterisk unpacks the tuple, so that habit_list truly is a list!
+                habit_list.append(*habit)
             try:
                 habit_name = questionary.select(
                     "Which habit do you want to delete?",
@@ -142,16 +127,17 @@ def cli():
                 db.drop_habit((habit_name, ))   # argument must be turned into type tuple --> (arg,)
             except ValueError:
                 print("There are no habits available! Please select a different option."
-                      "You could for example create a habit!")  # put more stuff in db.py drop_habit!
+                      "You could for example create a habit!")
 
         elif main_menu == "Exit":
             db.cur.close()
+            db.db.close()
             stop = True
 
 
-def format_print(db, data):
+def format_print_grid(db, data):
     """
-    Format print statements with tabulate to return to cli
+    Uses pandas DFs and tabulate to print data in a tidy format to CLI. Table format is "gird".
     :param db: name of the database connection
     :param data: an object that is returned by a method or function and needs to be printed to the console
     :return:
@@ -159,6 +145,18 @@ def format_print(db, data):
     df = pd.DataFrame(data)
     headers = list(map(lambda x: x[0], db.cur.description))
     print(tabulate(df, headers=headers, tablefmt="grid"))
+
+
+def format_print_outline(db, data):
+    """
+    Uses pandas DFs and tabulate to print data in a tidy format to CLI. Table format is "outline".
+    :param db: name of the database connection
+    :param data: an object that is returned by a method or function and needs to be printed to the console
+    :return:
+    """
+    df = pd.DataFrame(data)
+    headers = list(map(lambda x: x[0], db.cur.description))
+    print(tabulate(df, headers=headers, tablefmt="outline"))
 
 
 if __name__ == '__main__':

@@ -1,12 +1,11 @@
-
 def list_all_habits(db):
     """
-    Prints a list of all habits that are currently stored in the database.
-    :param db: name of the database
-    :return:
+    Fetches the data from the database and returns a list of all habits that are currently stored.
+    :param db: name of the database connection
+    :return: a list of habits
     """
     habits = db.cur.execute("""
-        SELECT name, periodicity, completed_total, current_streak, longest_streak, final_goal
+        SELECT name, periodicity, completed_total, current_streak, longest_streak, final_goal, established
         FROM habits
         ORDER BY CASE
             WHEN periodicity = 'daily' THEN 1
@@ -15,55 +14,54 @@ def list_all_habits(db):
             END,
         name
         """).fetchall()
-    print(habits)
     return habits
 
 
 def list_filtered_habits(db, periodicity):
     """
-    Prints a list of all habits with the selected periodicity that are currently stored in the database.
-    :param db: name of the database
+    Fetches the data from the database and returns a list of all habits with the selected periodicity that are currently
+    stored.
+    :param db: name of the database connection
     :param periodicity: periodicity for which the listed habits are filtered; selected by user
-    :return:
+    :return: a list of habits
     """
     habits = db.cur.execute("""
-        SELECT name, completed_total, current_streak, longest_streak, final_goal
+        SELECT name, completed_total, current_streak, longest_streak, final_goal, established
         FROM habits
         WHERE periodicity=?
         ORDER BY name
         """, (periodicity, )).fetchall()
-    print(habits)
     return habits
 
 
-def view_single_habit(db, habit):
+def view_single_habit(db, habit_name):
     """
-    Displays the database entry for any single habit.
-    :param db: an initialized sqlite3 database connection
-    :param habit: name of the habit that is to be displayed
-    :return: database entry for the respective habit
+    Fetches the data for a selected habit from the database and returns the currently stored values.
+    :param db: the name of a database connection
+    :param habit_name: name of the habit that is to be displayed
+    :return: data for the selected habit
     """
-    habit = db.cur.execute("""
-        SELECT name, description, periodicity, current_streak, longest_streak, final_goal, completed_total,
+    habit_data = db.cur.execute("""
+        SELECT name, description, periodicity, completed_total, current_streak, longest_streak, final_goal, established,
             creation_date
         FROM habits
         WHERE name=?
-        """, (habit, )).fetchall()
-    print(habit)
-    return habit
+        """, (habit_name, )).fetchall()
+    return habit_data
 
 
 def view_longest_streaks(db):
     """
-    Prints all habits with the longest day streaks stratified by periodicity.
-    :param db: name of the database
-    :return:
+    Fetches the data for all habits with the longest day streak stratified by periodicity from the database and
+    returns the currently stored values.
+    :param db: name of the database connection
+    :return: a list of all habits with max value for longest_streak
     """
     periods = ["daily", "weekly", "monthly"]
     habits = []
     for period in periods:
         streaks = db.cur.execute("""
-                SELECT ALL name, periodicity, longest_streak
+                SELECT ALL name, periodicity, longest_streak, established
                 FROM habits
                 WHERE periodicity = ?
                 AND longest_streak = (SELECT MAX(longest_streak) FROM habits WHERE periodicity = ?)
@@ -71,15 +69,15 @@ def view_longest_streaks(db):
                 """, (period, period)).fetchall()
         for streak in streaks:
             habits.append(streak)
-    print(habits)
     return habits
 
 
 def view_closest_goal(db):
     """
-    Prints the habits where the longest day streak is closest to the final goal stratified by periodicity.
-    :param db: name of the database
-    :return:
+    Fetches the data for all habits where the current day streak is closest to the final goal stratified by periodicity
+    from the database and returns the currently stored values.
+    :param db: name of the database connection
+    :return: a list of all habits with the smallest difference of final_goal and current_streak
     """
     periods = ["daily", "weekly", "monthly"]
     habits = []
@@ -94,7 +92,6 @@ def view_closest_goal(db):
                     """, (period, period)).fetchall()
         for streak in streaks:
             habits.append(streak)
-    print(habits)
     return habits
 
 
@@ -102,19 +99,18 @@ def view_established_habits(db):
     """
     Return all habits that are already established, i.e. where the final goal has been reached in one streak.
     :param db: name of the database
-    :return:
+    :return:a list of habits
     """
     periods = ["daily", "weekly", "monthly"]
     habits = []
     for period in periods:
         established = db.cur.execute("""
-                        SELECT ALL name, periodicity, current_streak, longest_streak, final_goal
+                        SELECT ALL name, periodicity, completed_total, current_streak, longest_streak, final_goal
                         FROM habits
                         WHERE periodicity = ?
-                        AND longest_streak >= final_goal
+                        AND established = ?
                         ORDER BY periodicity, name
-                        """, (period, )).fetchall()
+                        """, (period, True)).fetchall()
         for habit in established:
             habits.append(habit)
-    print(habits)
     return habits

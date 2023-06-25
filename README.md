@@ -12,7 +12,7 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-The program is written in python 3.11 older versions might not be supported.
+The program was developed under python 3.11. Older versions might not be supported.
 
 To start the program execute
 ```shell
@@ -21,6 +21,7 @@ python main.py
 and follow the instructions in your console.
 
 ## Testing
+Run the following command in your console to run the test suite of the program:
 ```shell
 pytest .
 ```
