@@ -84,7 +84,6 @@ class TestHabitTracker:
                 established
             FROM habits WHERE name=?
             """, (habit.name,)).fetchall()
-        print(diary)
         assert diary == [('diary', 'Write a diary entry every evening.', 'daily', 0, 0, 0, 14, False)]
 
     def test_fetch_habit_data(self):
@@ -96,9 +95,7 @@ class TestHabitTracker:
 
     def test_complete_daily_habit_break_habit(self):
         habit = Habit("brush teeth").fetch_habit_data(self.db)
-        print(habit.completed_total, habit.current_streak, habit.longest_streak)
         habit.complete_habit(db=self.db, completed=datetime(2023, 5, 11, 10, 43, 58, 654978))
-        print(habit.completed_total, habit.current_streak, habit.longest_streak)
         assert (habit.completed_total, habit.current_streak, habit.longest_streak) == (27, 1, 11)
 
     def test_complete_daily_habit_completion_cooldown(self):
@@ -108,60 +105,44 @@ class TestHabitTracker:
 
     def test_complete_daily_habit_check_off_habit(self):
         habit = Habit("meditate").fetch_habit_data(self.db)
-        print(habit.completed_total, habit.current_streak, habit.longest_streak)
         habit.complete_habit(db=self.db, completed=datetime(2023, 5, 11, 10, 43, 58, 654978))
-        print(habit.completed_total, habit.current_streak, habit.longest_streak)
         assert (habit.completed_total, habit.current_streak, habit.longest_streak) == (18, 7, 7)
 
     def test_complete_weekly_habit_break_habit(self):
         habit = Habit('clean bathroom').fetch_habit_data(self.db)
-        print(habit.completed_total)
         habit.complete_habit(db=self.db, completed=datetime(2023, 5, 15, 10, 43, 58, 654978))
-        print(habit.completed_total)
         assert (habit.completed_total, habit.current_streak, habit.longest_streak) == (5, 1, 4)
 
     def test_complete_weekly_habit_completion_cooldown(self):
         habit = Habit('clean bathroom').fetch_habit_data(self.db)
-        print(habit.completed_total)
         habit.complete_habit(db=self.db, completed=datetime(2023, 5, 7, 20, 43, 58, 654978))
-        print(habit.completed_total)
         assert (habit.completed_total, habit.current_streak, habit.longest_streak) == (4, 4, 4)
 
     def test_complete_weekly_habit_check_off_habit(self):
         habit = Habit('clean bathroom').fetch_habit_data(self.db)
-        print(habit.completed_total)
         habit.complete_habit(db=self.db, completed=datetime(2023, 5, 8, 20, 43, 58, 654978))
-        print(habit.completed_total)
         assert (habit.completed_total, habit.current_streak, habit.longest_streak) == (5, 5, 5)
 
     def test_complete_monthly_habit_break_habit(self):
         habit = Habit('call mom').fetch_habit_data(self.db)
-        print(habit.completed_total)
         habit.complete_habit(db=self.db, completed=datetime(2023, 7, 2, 21, 43, 58, 654978))
-        print(habit.completed_total)
         assert (habit.completed_total, habit.current_streak, habit.longest_streak) == (3, 1, 2)
 
     def test_complete_monthly_habit_completion_cooldown(self):
         habit = Habit('call mom').fetch_habit_data(self.db)
-        print(habit.completed_total)
         habit.complete_habit(db=self.db, completed=datetime(2023, 5, 31, 20, 43, 58, 654978))
-        print(habit.completed_total)
         assert (habit.completed_total, habit.current_streak, habit.longest_streak) == (2, 2, 2)
 
     def test_complete_monthly_habit_check_off_habit(self):
         habit = Habit('call mom').fetch_habit_data(self.db)
-        print(habit.completed_total)
         habit.complete_habit(db=self.db, completed=datetime(2023, 6, 25, 14, 43, 58, 654978))
-        print(habit.completed_total)
         assert (habit.completed_total, habit.current_streak, habit.longest_streak) == (3, 3, 3)
 
     def test_complete_daily_habit_check_off_habit_with_final_goal_reached(self):
         habit = Habit("sleep").fetch_habit_data(self.db)
-        print(habit.completed_total, habit.current_streak, habit.longest_streak, habit.goal_reached)
         habit.complete_habit(db=self.db, completed=datetime(2023, 5, 11, 8, 43, 58, 654978))
-        print(habit.completed_total, habit.current_streak, habit.longest_streak, habit.goal_reached)
-        # assert (habit.completed_total, habit.current_streak, habit.longest_streak, habit.goal_reached) == (30, 28, 28,
-        #                                                                                                    True)
+        assert (habit.completed_total, habit.current_streak, habit.longest_streak, habit.goal_reached) == (30, 28, 28,
+                                                                                                           True)
         assert self.db.cur.execute("""
             SELECT name, completed_total, current_streak, longest_streak, final_goal, established
             FROM habits WHERE name=?
@@ -170,10 +151,7 @@ class TestHabitTracker:
     def test_complete_habit_first_time_completion(self):
         new_habit = Habit(name="read", desc="Read a few pages every evening.", period="daily", goal=14
                           ).create_habit(self.db)
-        print(new_habit.name)
-        print(new_habit.completed_total)
         new_habit.complete_habit(self.db)
-        print(new_habit.completed_total)
         assert (new_habit.completed_total, new_habit.current_streak, new_habit.longest_streak) == (1, 1, 1)
 
     def test_calculate_daily_timedelta(self):
@@ -186,8 +164,6 @@ class TestHabitTracker:
 
     def test_list_all_habits(self):
         data = analysis.list_all_habits(self.db)
-        print(len(data))
-        print(data)
         assert (len(data), data) == (5, [('brush teeth', 'daily', 26, 4, 11, 28, False),
                                          ('meditate', 'daily', 17, 6, 7, 28, False),
                                          ('sleep', 'daily', 29, 27, 27, 28, False),
@@ -196,50 +172,40 @@ class TestHabitTracker:
 
     def test_list_filtered_habits_daily(self):
         daily = analysis.list_filtered_habits(self.db, "daily")
-        print(daily)
         assert (len(daily), daily) == (3, [('brush teeth', 26, 4, 11, 28, False), ('meditate', 17, 6, 7, 28, False),
                                            ('sleep', 29, 27, 27, 28, False)])
 
     def test_list_filtered_habits_weekly(self):
         weekly = analysis.list_filtered_habits(self.db, "weekly")
-        print(weekly)
         assert (len(weekly), weekly) == (1, [('clean bathroom', 4, 4, 4, 8, False)])
 
     def test_list_filtered_habits_monthly(self):
         monthly = analysis.list_filtered_habits(self.db, "monthly")
-        print(monthly)
         assert (len(monthly), monthly) == (1, [('call mom', 2, 2, 2, 4, False)])
 
     def test_view_single_habit(self):
         data = analysis.view_single_habit(self.db, "brush teeth")
-        print(data)
         assert data == [('brush teeth', 'Brush teeth every morning.', 'daily', 26, 4, 11, 28, False,
                          '2023-04-10 08:06:02.066485')]
 
     def test_view_longest_streak(self):
         data = analysis.view_longest_streaks(self.db)
-        print(data)
         assert data == [('sleep', 'daily', 27, False), ('clean bathroom', 'weekly', 4, False),
                         ('call mom', 'monthly', 2, False)]
 
     def test_view_closest_goal(self):
         data = analysis.view_closest_goal(self.db)
-        print(data)
         assert data == [('sleep', 'daily', 27, 1, 28), ('clean bathroom', 'weekly', 4, 4, 8),
                         ('call mom', 'monthly', 2, 2, 4)]
 
     def test_view_established_habits(self):
         habit = Habit('sleep').fetch_habit_data(self.db)
-        print(habit.current_streak)
         habit.complete_habit(db=self.db, completed=datetime(2023, 5, 11, 8, 43, 58, 654978))
-        print(habit.current_streak)
         established = analysis.view_established_habits(self.db)
-        print(established)
         assert (len(established), established) == (1, [("sleep", "daily", 30, 28, 28, 28)])
 
     def test_habit_table(self):
         data = self.db.cur.execute("""SELECT * FROM habits""").fetchall()
-        print(data)
         assert len(data) == 5
 
     def test_completion_table(self):
@@ -249,7 +215,6 @@ class TestHabitTracker:
     def test_delete_habit(self):
         self.db.drop_habit(('meditate',))
         remaining = analysis.list_all_habits(self.db)
-        print(remaining)
         assert (len(remaining), remaining) == (4, [('brush teeth', 'daily', 26, 4, 11, 28, False),
                                                    ('sleep', 'daily', 29, 27, 27, 28, False),
                                                    ('clean bathroom', 'weekly', 4, 4, 4, 8, False),

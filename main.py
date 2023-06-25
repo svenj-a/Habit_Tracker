@@ -24,25 +24,41 @@ def cli():
         ).ask()
 
         if main_menu == "Create habit":
+
             name = questionary.text("What's the name of your new habit?").ask()
+            habit_created = False
+            while not habit_created:
+                if name == "":
+                    print("\nPlease provide a name for your habit!\n")
+                    name = questionary.text("What's the name of your new habit?").ask()
+                else:
+                    habit_created = True
+
             desc = questionary.text("Please provide a short description of your habit.").ask()
+
             period = questionary.select(
-                "How often do you want to perform your habit?",
-                choices=["daily", "weekly", "monthly"]
-            ).ask()
+                    "How often do you want to perform your habit?",
+                    choices=["daily", "weekly", "monthly"]
+                ).ask()
+
             goal = questionary.text(
-                "Set a final goal: How often do you want to perform the habit? Please insert a number..."
+                "Set a final goal: How often do you want to perform the habit? Please insert an integer number..."
             ).ask()
             habit_created = False
             while not habit_created:
                 try:
-                    Habit(name=name, desc=desc, period=period, goal=int(goal)).create_habit(db)
-                    habit_created = True
+                    if int(goal) < 2:
+                        raise ValueError()
+                    else:
+                        Habit(name=name, desc=desc, period=period, goal=int(goal)).create_habit(db)
+                        habit_created = True
                 except (ValueError, TypeError):
-                    print("Please enter an integer number as goal!")
-                    goal = questionary.text("Set a final goal: ").ask()
+                    print("\nYour goal must be an integer number larger than 1!\n")
+                    goal = questionary.text(
+                        "Set a final goal: How often do you want to perform the habit? Please insert a number..."
+                    ).ask()
                 except sqlite3.IntegrityError:
-                    print(f"A habit with the name {name} already exists. Please choose a unique name:")
+                    print(f"\nA habit with the name {name} already exists. Please choose a unique name:\n")
                     name = questionary.text("What's the name of your new habit?").ask()
 
         elif main_menu == "Complete habit":
@@ -50,25 +66,28 @@ def cli():
             habit_list = []
             for habit in habits:
                 habit_list.append(*habit)  # the asterisk unpacks the tuple, so that habit_list truly is a list!
-            try:
-                name = questionary.select(
-                    "Which habit do you want to check off today?",
-                    choices=habit_list
-                ).ask()
+            habit_list.append("BACK TO MAIN MENU")
+            name = questionary.select(
+                "Which habit do you want to check off today?",
+                choices=habit_list
+            ).ask()
+            if name == "BACK TO MAIN MENU":
+                continue
+            else:
                 habit = Habit(name).fetch_habit_data(db)
                 habit.complete_habit(db)
-            except ValueError:
-                print("There are no habits available! Please select a different option."
-                      "You could start by creating a habit!")   # exception handling in case there are no habits
 
         elif main_menu == "Analyze habits":
             analysis_menu = questionary.select(
                 "What do you want to know about your habits?",
                 choices=["View all habits", "View habits with periodicity ...", "View one habit ...",
-                         "View personal records", "View established habits"]
+                         "View personal records", "View established habits", "BACK TO MAIN MENU"]
             ).ask()
 
-            if analysis_menu == "View all habits":
+            if analysis_menu == "BACK TO MAIN MENU":
+                continue
+
+            elif analysis_menu == "View all habits":
                 habits = analysis.list_all_habits(db)
                 format_print_outline(db, habits)
 
@@ -119,15 +138,15 @@ def cli():
             habit_list = []
             for habit in habits:
                 habit_list.append(*habit)
-            try:
-                habit_name = questionary.select(
-                    "Which habit do you want to delete?",
-                    choices=habit_list
-                ).ask()
-                db.drop_habit((habit_name, ))   # argument must be turned into type tuple --> (arg,)
-            except ValueError:
-                print("There are no habits available! Please select a different option."
-                      "You could for example create a habit!")
+            habit_list.append("BACK TO MAIN MENU")
+            habit_name = questionary.select(
+                "Which habit do you want to delete?",
+                choices=habit_list
+            ).ask()
+            if habit_name == "BACK TO MAIN MENU":
+                continue
+            else:
+                db.drop_habit((habit_name,))  # argument must be turned into type tuple --> (arg,)
 
         elif main_menu == "Exit":
             db.cur.close()
