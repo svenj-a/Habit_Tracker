@@ -9,22 +9,13 @@ import analysis
 
 
 def cli():
+    """
+    Main loop of the habit tracker program.
+    """
+
     db = DB()
 
-    # delete the following block after development is completed or put in try except to create dummy data:
-    # habit1 = Habit('sleep', 'Sleep at least 7h per day.', 'daily', 30)
-    # habit1.create_habit(db)
-    # habit2 = Habit('brush teeth', 'Brush teeth every morning.', 'daily', 28)
-    # habit2.create_habit(db)
-    # habit3 = Habit('clean bathroom', 'Clean the bathroom every week including toilet, shower, and sink.', 'weekly', 8)
-    # habit3.create_habit(db)
-    # habit4 = Habit('call mom', 'Call my mother once a month...', 'monthly', 4)
-    # habit4.create_habit(db)
-    # habit5 = Habit('meditate', 'Meditate at least 10 minutes every day after lunch.', 'daily', 60)
-    # habit5.create_habit(db)
-
     stop = False
-
     while not stop:
 
         main_menu = questionary.select(
@@ -59,16 +50,16 @@ def cli():
             habit_list = []
             for habit in habits:
                 habit_list.append(*habit)  # the asterisk unpacks the tuple, so that habit_list truly is a list!
-            # try:
-            name = questionary.select(
-                "Which habit do you want to check off today?",
-                choices=habit_list
-            ).ask()
-            habit = Habit(name).fetch_habit_data(db)
-            habit.complete_habit(db)
-            # except ValueError:
-            #     print("There are no habits available! Please select a different option."
-            #           "You could start by creating a habit!")   # check if exception handling is necessary here!
+            try:
+                name = questionary.select(
+                    "Which habit do you want to check off today?",
+                    choices=habit_list
+                ).ask()
+                habit = Habit(name).fetch_habit_data(db)
+                habit.complete_habit(db)
+            except ValueError:
+                print("There are no habits available! Please select a different option."
+                      "You could start by creating a habit!")   # exception handling in case there are no habits
 
         elif main_menu == "Analyze habits":
             analysis_menu = questionary.select(
@@ -107,19 +98,16 @@ def cli():
             elif analysis_menu == "View personal records":
                 record = questionary.select(
                     "Please select what you want to display:",
-                    choices=["View habit with the longest day streak!", "View habit with the closest goal!"]  # "both"
+                    choices=["View habits with the longest day streak!", "View habits with the closest goal!"]
                 ).ask()
-                if record == "View habit with the longest day streak!":
+                if record == "View habits with the longest day streak!":
                     lon_str = analysis.view_longest_streaks(db)
                     print("\nYou have obtained the longest streak for these habits:\n")
                     format_print_grid(db, lon_str)
-                elif record == "View habit with the closest goal!":
+                elif record == "View habits with the closest goal!":
                     cl_goal = analysis.view_closest_goal(db)
                     print("\nThese habits are closest to your final goal:\n")
                     format_print_grid(db, cl_goal)
-                # elif record == "both":
-                #     analysis.view_longest_streaks(db)
-                #     analysis.view_closest_goal(db)
 
             elif analysis_menu == "View established habits":
                 habits = analysis.view_established_habits(db)
@@ -127,8 +115,7 @@ def cli():
                 format_print_grid(db, habits)
 
         elif main_menu == "Delete habit":
-            db.cur.execute("SELECT name FROM habits ORDER BY name")
-            habits = db.cur.fetchall()
+            habits = db.cur.execute("SELECT name FROM habits ORDER BY name").fetchall()
             habit_list = []
             for habit in habits:
                 habit_list.append(*habit)
@@ -140,16 +127,17 @@ def cli():
                 db.drop_habit((habit_name, ))   # argument must be turned into type tuple --> (arg,)
             except ValueError:
                 print("There are no habits available! Please select a different option."
-                      "You could for example create a habit!")  # put more stuff in db.py drop_habit!
+                      "You could for example create a habit!")
 
         elif main_menu == "Exit":
             db.cur.close()
+            db.db.close()
             stop = True
 
 
 def format_print_grid(db, data):
     """
-    Format print statements with tabulate to return to cli
+    Uses pandas DFs and tabulate to print data in a tidy format to CLI. Table format is "gird".
     :param db: name of the database connection
     :param data: an object that is returned by a method or function and needs to be printed to the console
     :return:
@@ -161,9 +149,9 @@ def format_print_grid(db, data):
 
 def format_print_outline(db, data):
     """
-
-    :param db:
-    :param data:
+    Uses pandas DFs and tabulate to print data in a tidy format to CLI. Table format is "outline".
+    :param db: name of the database connection
+    :param data: an object that is returned by a method or function and needs to be printed to the console
     :return:
     """
     df = pd.DataFrame(data)

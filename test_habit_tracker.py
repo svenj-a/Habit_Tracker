@@ -29,19 +29,6 @@ class TestHabitTracker:
         self.db.cur.execute("""INSERT INTO habits VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", habit_call_mom)
         self.db.db.commit()
 
-        # Habit(name='brush teeth', desc='Brush teeth every morning.', date="2023-04-10 08:06:02.066485",
-        #       period='daily',
-        #       goal=28).create_habit(db)
-        # Habit(name='sleep', desc='Sleep at least 7h per day.', date="2023-04-10 08:30:05.845662", period='daily',
-        #       goal=30, ).create_habit(db)
-        # Habit(name='meditate', desc='Meditate at least 10 minutes every day after lunch.',
-        #       date="2023-04-13 11:46:33.765130", period='daily', goal=60).create_habit(db)
-        # Habit(name='clean bathroom', desc='Clean the bathroom including toilet, shower, and sink.',
-        #       date="2023-04-15 17:21:44.654321", period='weekly', goal=8).create_habit(db)
-        # Habit(name='call mom', desc='Call my mother once a month...', period='monthly',
-        #       date="2023-04-17 22:05:24.756612",
-        #       goal=4).create_habit(db)
-
         completion_data = {"brush teeth": ["2023-04-10 08:15:40.123456", "2023-04-11 08:28:32.123789",
                                            "2023-04-12 09:43:15.456789", "2023-04-13 08:49:01.798456",
                                            "2023-04-14 09:18:56.123654", "2023-04-15 07:39:33.321987",
@@ -272,7 +259,6 @@ class TestHabitTracker:
         self.db.cur.close()
         self.db.db.close()
         os.remove("test.db")
-
 
 # unique constraint test assert raise error ....
 # make sure to run tests simultaneously -> put correct command in instructions!
