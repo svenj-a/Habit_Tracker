@@ -225,5 +225,4 @@ class TestHabitTracker:
         self.db.db.close()
         os.remove("test.db")
 
-# unique constraint test assert raise error ....
-# make sure to run tests simultaneously -> put correct command in instructions!
+# test unique constraint at create habit: assert raise error ....
