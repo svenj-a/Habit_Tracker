@@ -90,7 +90,7 @@ class Habit:
         db.add_completion(self.name, date)
         self.current_streak, self.longest_streak, self.completed_total = 1, 1, 1
         db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
-        print(f"Congratulations, you completed the habit '{self.name}' for the first time!")
+        print(f"\nCongratulations, you completed the habit '{self.name}' for the first time!\n")
         return self
 
     def _calculate_timedelta(self, completed, last_completed):
@@ -144,7 +144,7 @@ class Habit:
         self.completed_total += 1
         self.current_streak = 1
         db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
-        print(f"You broke the habit '{self.name}'! Your streak was reset to 1. Try again, you can do it!!")
+        print(f"\nYou broke the habit '{self.name}'! Your streak was reset to 1. Try again, you can do it!!\n")
         return self
 
     def _completion_cooldown(self):
@@ -154,7 +154,7 @@ class Habit:
         :return: a habit object
         """
         # development idea: update timestamp of last completion entry when habit is completed multiple times
-        print(f"You have already completed this {self.period} habit! Try again later...")
+        print(f"\nYou have already completed this {self.period} habit! Try again later...\n")
         return self
 
     def _check_off_habit(self, db, date, timespan):
@@ -170,13 +170,11 @@ class Habit:
         db.add_completion(self.name, date)
         self.completed_total += 1
         self.current_streak += 1
-        print(self.longest_streak)
         self._check_longest_streak()
-        print(self.longest_streak)
-        self._check_goal(db)
         db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
-        print(f"Congratulations! You have checked off your habit '{self.name}' "
+        print(f"\nCongratulations! You have checked off your habit '{self.name}' "
               f"and gained a streak of {self.current_streak} {timespan}!")
+        self._check_goal(db)
         return self
 
     def _check_longest_streak(self):
@@ -198,10 +196,10 @@ class Habit:
         """
         if self.longest_streak < self.goal:
             to_go = self.goal - self.longest_streak
-            print(f"Keep it going, you have {to_go} time(s) to go until you reach your final goal!")
+            print(f"Keep it going, you have {to_go} time(s) to go until you reach your final goal!\n")
             return self
         elif self.goal == self.longest_streak:
             self.goal_reached = True
             db.update_established(self.goal_reached, self.name)
-            print(f"Congratulations, you reached your final goal for the habit '{self.name}'")
+            print(f"Congratulations! You reached your final goal for the habit '{self.name}'\n")
             return self
