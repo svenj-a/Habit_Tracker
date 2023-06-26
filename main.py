@@ -25,12 +25,12 @@ def cli():
 
         if main_menu == "Create habit":
 
-            name = questionary.text("What's the name of your new habit?").ask()
+            name = questionary.text("What's the name of your new habit?").ask().lower()
             habit_created = False
             while not habit_created:
                 if name == "":
                     print("\nPlease provide a name for your habit!\n")
-                    name = questionary.text("What's the name of your new habit?").ask()
+                    name = questionary.text("What's the name of your new habit?").ask().lower()
                 else:
                     habit_created = True
 
@@ -59,7 +59,7 @@ def cli():
                     ).ask()
                 except sqlite3.IntegrityError:
                     print(f"\nA habit with the name {name} already exists. Please choose a unique name:\n")
-                    name = questionary.text("What's the name of your new habit?").ask()
+                    name = questionary.text("What's the name of your new habit?").ask().lower()
 
         elif main_menu == "Complete habit":
             habits = db.cur.execute("SELECT name FROM habits ORDER BY name").fetchall()
@@ -67,68 +67,74 @@ def cli():
             for habit in habits:
                 habit_list.append(*habit)  # the asterisk unpacks the tuple, so that habit_list truly is a list!
             habit_list.append("BACK TO MAIN MENU")
-            name = questionary.select(
+            selection = questionary.select(
                 "Which habit do you want to check off today?",
                 choices=habit_list
             ).ask()
-            if name == "BACK TO MAIN MENU":
+            if selection == "BACK TO MAIN MENU":
                 continue
             else:
-                habit = Habit(name).fetch_habit_data(db)
+                habit = Habit(selection).fetch_habit_data(db)
                 habit.complete_habit(db)
 
         elif main_menu == "Analyze habits":
-            analysis_menu = questionary.select(
+            selection = questionary.select(
                 "What do you want to know about your habits?",
                 choices=["View all habits", "View habits with periodicity ...", "View one habit ...",
-                         "View personal records", "View established habits", "BACK TO MAIN MENU"]
+                         "View personal records...", "View established habits", "BACK TO MAIN MENU"]
             ).ask()
 
-            if analysis_menu == "BACK TO MAIN MENU":
+            if selection == "BACK TO MAIN MENU":
                 continue
 
-            elif analysis_menu == "View all habits":
+            elif selection == "View all habits":
                 habits = analysis.list_all_habits(db)
                 format_print_outline(db, habits)
 
-            elif analysis_menu == "View habits with periodicity ...":
-                period = questionary.select(
-                    "Which filter do you want to apply?", choices=["daily", "weekly", "monthly"]
+            elif selection == "View habits with periodicity ...":
+                selection = questionary.select(
+                    "Which filter do you want to apply?", choices=["daily", "weekly", "monthly", "BACK TO MAIN MENU"]
                 ).ask()
-                habits = analysis.list_filtered_habits(db, period)
-                format_print_outline(db, habits)
+                if selection == "BACK TO MAIN MENU":
+                    continue
+                else:
+                    habits = analysis.list_filtered_habits(db, selection)
+                    format_print_outline(db, habits)
 
-            elif analysis_menu == "View one habit ...":
+            elif selection == "View one habit ...":
                 habits = db.cur.execute("SELECT name FROM habits ORDER BY name").fetchall()
                 habit_list = []
                 for habit in habits:
                     habit_list.append(*habit)  # the asterisk unpacks the tuple, so that habit_list truly is a list!
-                try:
-                    habit_name = questionary.select(
-                        "Which habit do you want to display in detail?",
-                        choices=habit_list
-                    ).ask()
-                    habit = analysis.view_single_habit(db, habit_name)  # turn argument back into type tuple --> (arg,)
-                    format_print_grid(db, habit)
-                except ValueError:
-                    print("There are no habits available! Please select a different option."
-                          "You could for example create a habit!")
-
-            elif analysis_menu == "View personal records":
-                record = questionary.select(
-                    "Please select what you want to display:",
-                    choices=["View habits with the longest day streak!", "View habits with the closest goal!"]
+                habit_list.append("BACK TO MAIN MENU")
+                selection = questionary.select(
+                    "Which habit do you want to display in detail?",
+                    choices=habit_list
                 ).ask()
-                if record == "View habits with the longest day streak!":
+                if selection == "BACK TO MAIN MENU":
+                    continue
+                else:
+                    habit = analysis.view_single_habit(db, selection)  # turn argument back into type tuple --> (arg,)
+                    format_print_grid(db, habit)
+
+            elif selection == "View personal records...":
+                selection = questionary.select(
+                    "Please select what you want to display:",
+                    choices=["View habits with the longest day streak!", "View habits with the closest goal!",
+                             "BACK TO MAIN MENU"]
+                ).ask()
+                if selection == "BACK TO MAIN MENU":
+                    continue
+                elif selection == "View habits with the longest day streak!":
                     lon_str = analysis.view_longest_streaks(db)
                     print("\nYou have obtained the longest streak for these habits:\n")
                     format_print_grid(db, lon_str)
-                elif record == "View habits with the closest goal!":
+                elif selection == "View habits with the closest goal!":
                     cl_goal = analysis.view_closest_goal(db)
                     print("\nThese habits are closest to your final goal:\n")
                     format_print_grid(db, cl_goal)
 
-            elif analysis_menu == "View established habits":
+            elif selection == "View established habits":
                 habits = analysis.view_established_habits(db)
                 print("\nThese habits are already established:\n")
                 format_print_grid(db, habits)
@@ -139,14 +145,14 @@ def cli():
             for habit in habits:
                 habit_list.append(*habit)
             habit_list.append("BACK TO MAIN MENU")
-            habit_name = questionary.select(
+            selection = questionary.select(
                 "Which habit do you want to delete?",
                 choices=habit_list
             ).ask()
-            if habit_name == "BACK TO MAIN MENU":
+            if selection == "BACK TO MAIN MENU":
                 continue
             else:
-                db.drop_habit((habit_name,))  # argument must be turned into type tuple --> (arg,)
+                db.drop_habit((selection,))  # argument must be turned into type tuple --> (arg,)
 
         elif main_menu == "Exit":
             db.cur.close()
