@@ -47,7 +47,12 @@ def cli():
             habit_created = False
             while not habit_created:
                 try:
-                    if int(goal) < 2:
+                    if len(goal) > 5:
+                        print("\nYou probably won't get that old ;). Please choose a reasonable goal.\n")
+                        goal = questionary.text(
+                            "Set a final goal: Insert an integer number between 2 and 99,999"
+                        ).ask()
+                    elif int(goal) < 2:
                         raise ValueError()
                     else:
                         Habit(name=name, desc=desc, period=period, goal=int(goal)).create_habit(db)
@@ -115,6 +120,7 @@ def cli():
                     continue
                 else:
                     habit = analysis.view_single_habit(db, selection)  # turn argument back into type tuple --> (arg,)
+                    print(habit)
                     format_print_grid(db, habit)
 
             elif selection == "View personal records...":

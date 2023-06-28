@@ -3,8 +3,8 @@ from datetime import datetime
 
 class Habit:
 
-    def __init__(self, name, desc="", period="daily", date=datetime.today(), completed_total=0, cur_streak=0,
-                 lon_streak=0, goal=100, goal_reached=False):
+    def __init__(self, name, desc="", period="daily", date=datetime.today(), cur_streak=0, lon_streak=0, total=0,
+                 goal=100, goal_reached=False):
         """
         The Habit class specifies all habit attributes. It can create new habits or fetch existing habits from the
         database and complete habits. Helper methods are included to break down the different steps of the
@@ -15,7 +15,7 @@ class Habit:
                        can be selected by the user at habit creation through selection menu. Type str.
         :param date: Creation date of the habit. Default at habit creation is the current timestamp. Other values can be
                      inserted for testing purposes. Type timestamp.
-        :param completed_total: Counts overall completions of a habit. Default at habit creation is 0. Other values can
+        :param total: Counts overall completions of a habit. Default at habit creation is 0. Other values can
                                 be inserted for testing purposes. Type int.
         :param cur_streak: Counts the current day streak of a habit. Default at habit creation is 0. Other values can be
                            inserted for testing purposes. Type int.
@@ -30,7 +30,7 @@ class Habit:
         self.desc = desc
         self.period = period
         self.date = date
-        self.completed_total = completed_total
+        self.total = total
         self.current_streak = cur_streak
         self.longest_streak = lon_streak
         self.goal = goal
@@ -42,7 +42,7 @@ class Habit:
         :param db: name of the database connection
         :return: a habit object
         """
-        db.add_habit(self.name, self.desc, self.period, self.date, self.completed_total, self.current_streak,
+        db.add_habit(self.name, self.desc, self.period, self.date, self.total, self.current_streak,
                      self.longest_streak, self.goal, self.goal_reached)
         return self
 
@@ -88,8 +88,8 @@ class Habit:
         :return: a habit object
         """
         db.add_completion(self.name, date)
-        self.current_streak, self.longest_streak, self.completed_total = 1, 1, 1
-        db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
+        self.current_streak, self.longest_streak, self.total = 1, 1, 1
+        db.update_streaks(self.name, self.current_streak, self.longest_streak, self.total)
         print(f"\nCongratulations, you completed the habit '{self.name}' for the first time!\n")
         return self
 
@@ -141,9 +141,9 @@ class Habit:
         :return: a habit object
         """
         db.add_completion(self.name, date)
-        self.completed_total += 1
+        self.total += 1
         self.current_streak = 1
-        db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
+        db.update_streaks(self.name, self.current_streak, self.longest_streak, self.total)
         print(f"\nYou broke the habit '{self.name}'! Your streak was reset to 1. Try again, you can do it!!\n")
         return self
 
@@ -168,10 +168,10 @@ class Habit:
         :return: a habit object
         """
         db.add_completion(self.name, date)
-        self.completed_total += 1
+        self.total += 1
         self.current_streak += 1
         self._check_longest_streak()
-        db.update_streaks(self.name, self.current_streak, self.longest_streak, self.completed_total)
+        db.update_streaks(self.name, self.current_streak, self.longest_streak, self.total)
         print(f"\nCongratulations! You have checked off your habit '{self.name}' "
               f"and gained a streak of {self.current_streak} {timespan}!")
         self._check_goal(db)
