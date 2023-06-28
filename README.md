@@ -2,7 +2,7 @@
 
 This habit tracking app helps you to implement new habits efficiently and supports you in reaching your goals faster. It
 motivates you to stick to your good resolutions and rewards you with completion streaks for your successfully completed
-daily, weekly or monthly tasks and thus pursuing your long-term goals. You can track and analyze your progress, so that
+daily, weekly, or monthly tasks and thus pursuing your long-term goals. You can track and analyze your progress, so that
 you can always check how you're doing and how close you already are to having established your new routines.
 
 ## Functionality
