@@ -232,4 +232,7 @@ class TestHabitTracker:
         self.db.db.close()
         os.remove("test.db")
 
-# test unique constraint at create habit: assert raise error ....
+
+# ideas for additional tests:
+# test unique constraint at create habit: assert raise error...
+# create two habits with the same stats and test displaying both at view longest streak and view closest goal

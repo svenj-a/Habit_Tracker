@@ -47,14 +47,14 @@ def cli():
             habit_created = False
             while not habit_created:
                 try:
-                    if len(goal) > 5:
+                    if len(goal) > 5:  # prevents error if input is too large to be converted to int type
                         print("\nYou probably won't get that old ;). Please choose a reasonable goal.\n")
                         goal = questionary.text(
                             "Set a final goal: Insert an integer number between 2 and 99,999"
                         ).ask()
-                    elif int(goal) < 2:
+                    elif int(goal) < 2:  # prevents negative numbers/ 0/ 1, to asure that habits establish as intended
                         raise ValueError()
-                    else:
+                    else:   # prevents input that is NOT a number like "bob"
                         Habit(name=name, desc=desc, period=period, goal=int(goal)).create_habit(db)
                         habit_created = True
                 except (ValueError, TypeError):
