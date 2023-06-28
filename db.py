@@ -28,12 +28,12 @@ class DB:
         self.cur.execute("""CREATE TABLE IF NOT EXISTS habits (
                             name TEXT PRIMARY KEY,
                             description TEXT,
-                            periodicity TEXT,
+                            period TEXT,
                             creation_date DATE,
-                            completed_total INTEGER,
                             current_streak INTEGER,
                             longest_streak INTEGER,
-                            final_goal INTEGER,
+                            total INTEGER,
+                            goal INTEGER,
                             established BOOLEAN
                             )""")
         self.cur.execute("""CREATE TABLE IF NOT EXISTS completions (
@@ -62,7 +62,7 @@ class DB:
         :param goal: number of times a habit is to be completed (int); provided by user input
         :param goal_reached: boolean value that indicates where a habit is established
         """
-        habit_attributes = [name, desc, period, creation_date, completed_total, current_streak, longest_streak, goal,
+        habit_attributes = [name, desc, period, creation_date, current_streak, longest_streak, completed_total, goal,
                             goal_reached]
         self.cur.execute("""INSERT INTO habits VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", habit_attributes)
         self.db.commit()
@@ -87,7 +87,7 @@ class DB:
         """
         self.cur.execute("""UPDATE habits SET current_streak=? WHERE name=?""", (curr_str, name))
         self.cur.execute("""UPDATE habits SET longest_streak=? WHERE name=?""", (lon_str, name))
-        self.cur.execute("""UPDATE habits SET completed_total=? WHERE name=?""", (comp_tot, name))
+        self.cur.execute("""UPDATE habits SET total=? WHERE name=?""", (comp_tot, name))
         self.db.commit()
 
     def update_established(self, goal_reached, name):

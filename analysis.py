@@ -5,12 +5,12 @@ def list_all_habits(db):
     :return: a list of habits
     """
     habits = db.cur.execute("""
-        SELECT name, periodicity, completed_total, current_streak, longest_streak, final_goal, established
+        SELECT name, period, current_streak, longest_streak, total, goal, established
         FROM habits
         ORDER BY CASE
-            WHEN periodicity = 'daily' THEN 1
-            WHEN periodicity = 'weekly' THEN 2
-            WHEN periodicity = 'monthly' THEN 3
+            WHEN period = 'daily' THEN 1
+            WHEN period = 'weekly' THEN 2
+            WHEN period = 'monthly' THEN 3
             END,
         name
         """).fetchall()
@@ -26,9 +26,9 @@ def list_filtered_habits(db, periodicity):
     :return: a list of habits
     """
     habits = db.cur.execute("""
-        SELECT name, completed_total, current_streak, longest_streak, final_goal, established
+        SELECT name, current_streak, longest_streak, total, goal, established
         FROM habits
-        WHERE periodicity=?
+        WHERE period=?
         ORDER BY name
         """, (periodicity, )).fetchall()
     return habits
@@ -42,11 +42,11 @@ def view_single_habit(db, habit_name):
     :return: data for the selected habit
     """
     habit_data = db.cur.execute("""
-        SELECT name, description, periodicity, completed_total, current_streak, longest_streak, final_goal, established,
-            creation_date
+        SELECT name, description, period, (SELECT MAX(completion_date) FROM completions WHERE name=?)
+            AS last_completion_date, current_streak, longest_streak, total, goal, established, creation_date
         FROM habits
         WHERE name=?
-        """, (habit_name, )).fetchall()
+        """, (habit_name, habit_name)).fetchall()
     return habit_data
 
 
@@ -61,10 +61,10 @@ def view_longest_streaks(db):
     habits = []
     for period in periods:
         streaks = db.cur.execute("""
-                SELECT ALL name, periodicity, longest_streak, established
+                SELECT ALL name, period, longest_streak, established
                 FROM habits
-                WHERE periodicity = ?
-                AND longest_streak = (SELECT MAX(longest_streak) FROM habits WHERE periodicity = ?)
+                WHERE period = ?
+                AND longest_streak = (SELECT MAX(longest_streak) FROM habits WHERE period = ?)
                 ORDER BY name
                 """, (period, period)).fetchall()
         for streak in streaks:
@@ -83,11 +83,11 @@ def view_closest_goal(db):
     habits = []
     for period in periods:
         streaks = db.cur.execute("""
-                    SELECT ALL name, periodicity, current_streak, (final_goal-current_streak) AS difference, final_goal
+                    SELECT ALL name, period, current_streak, (goal-current_streak) AS difference, goal
                     FROM habits
-                    WHERE longest_streak < final_goal
-                    AND periodicity = ?
-                    AND difference = (SELECT MIN(final_goal-current_streak) FROM habits WHERE periodicity = ?)
+                    WHERE established=0
+                    AND period=?
+                    AND difference = (SELECT MIN(goal-current_streak) FROM habits WHERE established=0 AND period=?)
                     ORDER BY name
                     """, (period, period)).fetchall()
         for streak in streaks:
@@ -105,11 +105,11 @@ def view_established_habits(db):
     habits = []
     for period in periods:
         established = db.cur.execute("""
-                        SELECT ALL name, periodicity, completed_total, current_streak, longest_streak, final_goal
+                        SELECT ALL name, period, current_streak, longest_streak, total, goal
                         FROM habits
-                        WHERE periodicity = ?
+                        WHERE period = ?
                         AND established = ?
-                        ORDER BY periodicity, name
+                        ORDER BY period, name
                         """, (period, True)).fetchall()
         for habit in established:
             habits.append(habit)
